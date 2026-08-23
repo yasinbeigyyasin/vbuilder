@@ -472,7 +472,14 @@ function getContainerProps(node, device) {
     const preset = PRESETS[device];
     return { x: 0, y: 0, width: preset.width, height: preset.height };
   }
-  return getNodeProps(parent, device);
+  const parentProps = getNodeProps(parent, device);
+  const border = Math.max(0, num(parentProps.borderWidth));
+  return {
+    x: border,
+    y: border,
+    width: Math.max(1, num(parentProps.width) - (border * 2)),
+    height: Math.max(1, num(parentProps.height) - (border * 2)),
+  };
 }
 
 function getAbsoluteProps(node, device = state.activeDevice, seen = new Set()) {
@@ -483,7 +490,9 @@ function getAbsoluteProps(node, device = state.activeDevice, seen = new Set()) {
   const nextSeen = new Set(seen);
   nextSeen.add(node.id);
   const parentProps = getAbsoluteProps(parent, device, nextSeen);
-  return { ...props, x: num(parentProps.x) + num(props.x), y: num(parentProps.y) + num(props.y) };
+  const parentLocal = getNodeProps(parent, device);
+  const border = Math.max(0, num(parentLocal.borderWidth));
+  return { ...props, x: num(parentProps.x) + border + num(props.x), y: num(parentProps.y) + border + num(props.y) };
 }
 
 function isDescendant(nodeId, ancestorId) {
@@ -1373,10 +1382,12 @@ function reparentNodePreservingPosition(node, parentId, device = state.activeDev
   const global = getAbsoluteProps(node, device);
   const parent = parentId ? getNode(parentId) : null;
   const parentGlobal = parent ? getAbsoluteProps(parent, device) : { x: 0, y: 0 };
+  const parentLocal = parent ? getNodeProps(parent, device) : { borderWidth: 0 };
+  const border = Math.max(0, num(parentLocal.borderWidth));
   node.parentId = parent ? parent.id : null;
   setNodeProps(node, {
-    x: Math.round(global.x - num(parentGlobal.x)),
-    y: Math.round(global.y - num(parentGlobal.y)),
+    x: Math.round(global.x - num(parentGlobal.x) - border),
+    y: Math.round(global.y - num(parentGlobal.y) - border),
   }, device);
 }
 
