@@ -128,6 +128,14 @@
     <input id="imageInput" type="file" accept="image/*" hidden />
     <input id="projectInput" type="file" accept=".vbuilder,.json,application/json" hidden />
 
+    <div class="context-menu hidden" id="layerContextMenu" role="menu">
+      <button type="button" data-context-action="rename" role="menuitem">Rename</button>
+      <button type="button" data-context-action="duplicate" role="menuitem">Duplicate</button>
+      <button type="button" data-context-action="move-page" role="menuitem" id="moveToPageAction">Move to page</button>
+      <div class="context-divider"></div>
+      <button class="context-danger" type="button" data-context-action="delete" role="menuitem">Delete</button>
+    </div>
+
     <div class="toast-region" id="toastRegion" aria-live="polite"></div>
 
     <div class="modal-backdrop hidden" id="codeModal" aria-hidden="true">

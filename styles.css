@@ -16,7 +16,7 @@
   --danger: #ef7b91;
   --canvas-space: #2c2c2c;
   --radius: 6px;
-  --font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font: Inter, sans-serif;
 }
 
 * {
@@ -436,7 +436,7 @@ svg {
 }
 
 .text-icon {
-  font-family: Georgia, serif;
+  font-family: Inter, sans-serif;
   font-size: 18px;
   font-weight: 700;
 }
@@ -1339,7 +1339,7 @@ svg {
   margin-top: 7px;
   overflow: hidden;
   color: var(--text-muted);
-  font-family: "SFMono-Regular", Consolas, monospace;
+  font-family: Inter, sans-serif;
   font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1439,7 +1439,7 @@ svg {
   border: 0;
   outline: 0;
   resize: none;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: Inter, sans-serif;
   font-size: 11px;
   line-height: 1.65;
   tab-size: 2;
@@ -1834,7 +1834,7 @@ svg {
 }
 
 .tool-letter {
-  font-family: Georgia, serif;
+  font-family: Inter, sans-serif;
   font-size: 17px;
   font-weight: 700;
 }
@@ -2044,4 +2044,127 @@ svg {
   height: 6px;
   border-right: 1px solid currentColor;
   border-bottom: 1px solid currentColor;
+}
+
+/* Figma-like pan/zoom canvas. The artboard is centered, then translated by the pan gesture. */
+.canvas-space {
+  display: block;
+  overflow: hidden;
+  cursor: default;
+}
+
+.canvas-space.is-panning {
+  cursor: grabbing;
+}
+
+.artboard-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  flex: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Custom tooltips and layer context actions. */
+.vbuilder-tooltip {
+  position: fixed;
+  z-index: 40000;
+  max-width: 220px;
+  padding: 6px 8px;
+  color: #f5f5f5;
+  background: #111111;
+  border: 1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.35);
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.vbuilder-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 35000;
+  width: 158px;
+  padding: 4px;
+  background: #252525;
+  border: 1px solid #4a4a4a;
+  border-radius: 5px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.context-menu button {
+  display: block;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--text-soft);
+  background: transparent;
+  border-radius: 3px;
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  text-align: left;
+}
+
+.context-menu button:hover {
+  color: #fff;
+  background: #333;
+}
+
+.context-menu button.context-danger:hover {
+  color: #ff9cad;
+  background: rgba(239, 123, 145, 0.12);
+}
+
+.context-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: #3b3b3b;
+}
+
+.layers-list {
+  padding-bottom: 72px;
+}
+
+.page-layer {
+  margin-bottom: 3px;
+}
+
+/* Figma-style root frame resize: drag anywhere along the bottom edge. */
+.page-resize-handle {
+  right: 8px;
+  bottom: -5px;
+  left: 8px;
+  width: auto;
+  height: 10px;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid transparent;
+  border-radius: 0;
+  cursor: ns-resize;
+  opacity: 0.9;
+}
+
+.page-resize-handle:hover,
+.page-resize-handle:focus-visible {
+  background: transparent;
+  border-top-color: var(--accent-strong);
+  outline: none;
+}
+
+.page-resize-handle span {
+  width: 34px;
+  height: 2px;
+  background: var(--accent-strong);
+  border: 0;
+  border-radius: 3px;
 }

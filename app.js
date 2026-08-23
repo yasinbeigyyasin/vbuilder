@@ -50,6 +50,8 @@ const refs = {
   imageInput: document.getElementById("imageInput"),
   projectInput: document.getElementById("projectInput"),
   toastRegion: document.getElementById("toastRegion"),
+  layerContextMenu: document.getElementById("layerContextMenu"),
+  moveToPageAction: document.getElementById("moveToPageAction"),
   codeModal: document.getElementById("codeModal"),
   codeOutput: document.getElementById("codeOutput"),
   previewModal: document.getElementById("previewModal"),
@@ -64,6 +66,9 @@ const state = {
   zoomMode: "fit",
   zoom: 0.72,
   computedZoom: 0.72,
+  panX: 0,
+  panY: 0,
+  contextNodeId: null,
   history: [],
   historyIndex: -1,
   interaction: null,
@@ -119,7 +124,7 @@ function defaultBaseFor(type, overrides = {}) {
       letterSpacing: 0,
       textAlign: "left",
       verticalAlign: "top",
-      fontFamily: "Inter, ui-sans-serif, sans-serif",
+      fontFamily: "Inter, sans-serif",
       padding: 0,
       responsiveBehavior: "scale",
       ...overrides,
@@ -140,7 +145,7 @@ function defaultBaseFor(type, overrides = {}) {
       lineHeight: 1.2,
       textAlign: "center",
       verticalAlign: "center",
-      fontFamily: "Inter, ui-sans-serif, sans-serif",
+      fontFamily: "Inter, sans-serif",
       padding: 8,
       responsiveBehavior: "left",
       ...overrides,
@@ -744,6 +749,7 @@ function renderCanvas() {
   refs.artboard.style.background = state.project.page.background || "#101114";
   refs.artboardWrap.style.width = `${Math.round(size.width * zoom)}px`;
   refs.artboardWrap.style.height = `${Math.round(size.height * zoom)}px`;
+  refs.artboardWrap.style.transform = `translate(calc(-50% + ${Math.round(state.panX)}px), calc(-50% + ${Math.round(state.panY)}px))`;
   refs.canvasCaption.textContent = preset.fluid
     ? `${preset.label} · fluid · ${size.width} × ${size.height} base`
     : `${preset.label} · ${size.width} × ${size.height}`;
@@ -792,7 +798,7 @@ function createCanvasNode(node, props, index) {
     inner.style.lineHeight = String(props.lineHeight || 1.2);
     inner.style.letterSpacing = `${num(props.letterSpacing)}px`;
     inner.style.textAlign = props.textAlign || "left";
-    inner.style.fontFamily = props.fontFamily || "Inter, ui-sans-serif, sans-serif";
+    inner.style.fontFamily = "Inter, sans-serif";
     inner.style.padding = `${Math.max(0, num(props.padding))}px`;
     inner.style.alignContent = verticalAlignValue(props.verticalAlign);
     inner.style.display = "flex";
@@ -807,7 +813,7 @@ function createCanvasNode(node, props, index) {
     inner.style.fontSize = `${Math.max(1, num(props.fontSize, 13))}px`;
     inner.style.fontWeight = String(props.fontWeight || 700);
     inner.style.lineHeight = String(props.lineHeight || 1.2);
-    inner.style.fontFamily = props.fontFamily || "Inter, ui-sans-serif, sans-serif";
+    inner.style.fontFamily = "Inter, sans-serif";
     inner.style.textAlign = props.textAlign || "center";
     inner.style.padding = `${Math.max(0, num(props.padding, 8))}px`;
     element.appendChild(inner);
@@ -930,7 +936,6 @@ function renderInspector() {
         ${numberField("Letter spacing", "letterSpacing", props.letterSpacing, -10, 20, "0.1")}
         ${selectField("Align", "textAlign", props.textAlign || "left", [{value:"left",label:"Left"},{value:"center",label:"Center"},{value:"right",label:"Right"}], "")}
         ${selectField("Vertical", "verticalAlign", props.verticalAlign || "top", [{value:"top",label:"Top"},{value:"center",label:"Center"},{value:"bottom",label:"Bottom"}], "")}
-        ${selectField("Font", "fontFamily", props.fontFamily || "Inter, ui-sans-serif, sans-serif", [{value:"Inter, ui-sans-serif, sans-serif",label:"Inter / System"},{value:"Georgia, serif",label:"Georgia"},{value:"ui-monospace, SFMono-Regular, monospace",label:"Mono"}], "field-full")}
       </div>
     </div>`;
   }
@@ -1351,8 +1356,8 @@ function startPan(event) {
     type: "pan",
     startX: event.clientX,
     startY: event.clientY,
-    scrollLeft: refs.canvasSpace.scrollLeft,
-    scrollTop: refs.canvasSpace.scrollTop,
+    originPanX: state.panX,
+    originPanY: state.panY,
   };
   window.addEventListener("pointermove", onInteractionMove);
   window.addEventListener("pointerup", endInteraction, { once: true });
@@ -1379,8 +1384,9 @@ function onInteractionMove(event) {
   if (!interaction) return;
 
   if (interaction.type === "pan") {
-    refs.canvasSpace.scrollLeft = interaction.scrollLeft - (event.clientX - interaction.startX);
-    refs.canvasSpace.scrollTop = interaction.scrollTop - (event.clientY - interaction.startY);
+    state.panX = interaction.originPanX + (event.clientX - interaction.startX);
+    state.panY = interaction.originPanY + (event.clientY - interaction.startY);
+    renderCanvas();
     return;
   }
 
@@ -1499,10 +1505,11 @@ function endInteraction() {
 }
 
 function handleCanvasPointerDown(event) {
-  if (state.spaceDown) {
+  if (event.button === 1 || state.spaceDown) {
     startPan(event);
     return;
   }
+  if (event.button !== 0) return;
   const resizeHandle = event.target.closest("[data-resize]");
   if (resizeHandle) {
     const selection = event.target.closest("[data-selection]");
@@ -1650,7 +1657,7 @@ function generateCss() {
     "/* Generated by VBuilder — desktop is fluid; 1440 × 900 is the reference frame. */",
     "* { box-sizing: border-box; }",
     "html, body { margin: 0; min-height: 100%; }",
-    `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; }`,
+    `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, sans-serif; }`,
     `.vb-page { position: relative; width: 100%; max-width: none; height: auto; aspect-ratio: ${desktop.width} / ${desktop.height}; margin: 0; overflow: hidden; container-type: inline-size; background: ${page.background || "#101114"}; }`,
   ];
 
@@ -1722,7 +1729,7 @@ function nodeCssLines(node, device) {
   if (node.type === "text") {
     lines.push(
       `color: ${props.color || "#f2f3f7"};`,
-      `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
+      `font-family: Inter, sans-serif;`,
       `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 16)), container.width)};`,
       `font-weight: ${props.fontWeight || 500};`,
       `line-height: ${props.lineHeight || 1.2};`,
@@ -1740,7 +1747,7 @@ function nodeCssLines(node, device) {
     lines.push(
       `background: ${props.fill || "#3b82f6"};`,
       `color: ${props.color || "#f8fbff"};`,
-      `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
+      `font-family: Inter, sans-serif;`,
       `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 13)), container.width)};`,
       `font-weight: ${props.fontWeight || 700};`,
       `line-height: ${props.lineHeight || 1.2};`,
@@ -2028,6 +2035,131 @@ function showToast(message, type = "success") {
   }, 2700);
 }
 
+let tooltipTimer = null;
+let tooltipElement = null;
+let tooltipTarget = null;
+
+function prepareTooltip(element) {
+  if (element.dataset.tooltip || !element.getAttribute("title")) return;
+  element.dataset.tooltip = element.getAttribute("title");
+  element.removeAttribute("title");
+}
+
+function hideTooltip() {
+  window.clearTimeout(tooltipTimer);
+  tooltipTarget = null;
+  if (tooltipElement) tooltipElement.classList.remove("visible");
+}
+
+function showTooltip(element) {
+  prepareTooltip(element);
+  const text = element.dataset.tooltip;
+  if (!text) return;
+  tooltipTarget = element;
+  window.clearTimeout(tooltipTimer);
+  tooltipTimer = window.setTimeout(() => {
+    if (!tooltipTarget) return;
+    if (!tooltipElement) {
+      tooltipElement = document.createElement("div");
+      tooltipElement.className = "vbuilder-tooltip";
+      document.body.appendChild(tooltipElement);
+    }
+    tooltipElement.textContent = text;
+    tooltipElement.classList.add("visible");
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    const left = Math.max(8, Math.min(window.innerWidth - tooltipRect.width - 8, rect.left + (rect.width / 2) - (tooltipRect.width / 2)));
+    const top = rect.top >= tooltipRect.height + 10 ? rect.top - tooltipRect.height - 8 : rect.bottom + 8;
+    tooltipElement.style.left = `${left}px`;
+    tooltipElement.style.top = `${top}px`;
+  }, 420);
+}
+
+function bindTooltips() {
+  document.querySelectorAll("[title]").forEach(prepareTooltip);
+  document.addEventListener("pointerover", (event) => {
+    const target = event.target.closest?.("[data-tooltip], [title]");
+    if (!target || target === tooltipTarget || target.contains(event.relatedTarget)) return;
+    showTooltip(target);
+  });
+  document.addEventListener("pointerout", (event) => {
+    const target = event.target.closest?.("[data-tooltip], [title]");
+    if (target && !target.contains(event.relatedTarget)) hideTooltip();
+  });
+  document.addEventListener("focusin", (event) => {
+    const target = event.target.closest?.("[data-tooltip], [title]");
+    if (target) showTooltip(target);
+  });
+  document.addEventListener("focusout", hideTooltip);
+  window.addEventListener("scroll", hideTooltip, true);
+}
+
+function closeLayerContextMenu() {
+  state.contextNodeId = null;
+  refs.layerContextMenu.classList.add("hidden");
+}
+
+function openLayerContextMenu(event, id) {
+  if (!id) {
+    closeLayerContextMenu();
+    return;
+  }
+  const node = getNode(id);
+  if (!node) return;
+  event.preventDefault();
+  state.selectedId = id;
+  state.contextNodeId = id;
+  renderAll();
+  refs.moveToPageAction.hidden = !node.parentId;
+  refs.layerContextMenu.classList.remove("hidden");
+  const menuWidth = 150;
+  const menuHeight = refs.layerContextMenu.offsetHeight || 140;
+  refs.layerContextMenu.style.left = `${Math.min(event.clientX, window.innerWidth - menuWidth - 8)}px`;
+  refs.layerContextMenu.style.top = `${Math.min(event.clientY, window.innerHeight - menuHeight - 8)}px`;
+}
+
+function duplicateSelectedNode() {
+  const node = getNode(state.contextNodeId || state.selectedId);
+  if (!node) return;
+  const originals = state.project.nodes.filter((candidate) => candidate.id === node.id || isDescendant(candidate.id, node.id));
+  const idMap = new Map(originals.map((original) => [original.id, uid(original.type)]));
+  const clones = originals.map((original, index) => {
+    const clone = deepClone(original);
+    clone.id = idMap.get(original.id);
+    clone.name = index === 0 ? `${original.name} copy` : original.name;
+    clone.parentId = idMap.get(original.parentId) || original.parentId || null;
+    return clone;
+  });
+  applyChange(() => {
+    state.project.nodes.push(...clones);
+    state.selectedId = idMap.get(node.id);
+  });
+  showToast("Layer duplicated", "success");
+}
+
+function handleLayerContextAction(action) {
+  const node = getNode(state.contextNodeId || state.selectedId);
+  closeLayerContextMenu();
+  if (!node) return;
+  if (action === "rename") {
+    renderAll();
+    window.setTimeout(() => {
+      const input = refs.inspectorContent.querySelector("[data-node-name]");
+      if (input) { input.focus(); input.select(); }
+    }, 0);
+    return;
+  }
+  if (action === "duplicate") {
+    duplicateSelectedNode();
+    return;
+  }
+  if (action === "move-page") {
+    applyChange(() => reparentNodePreservingPosition(node, null));
+    return;
+  }
+  if (action === "delete") deleteSelected();
+}
+
 function bindEvents() {
   document.querySelectorAll("[data-add]").forEach((button) => {
     button.addEventListener("click", () => addElement(button.dataset.add));
@@ -2057,17 +2189,36 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.activeDevice = button.dataset.device;
       state.zoomMode = "fit";
+      state.panX = 0;
+      state.panY = 0;
       renderAll();
     });
   });
 
   refs.artboard.addEventListener("pointerdown", handleCanvasPointerDown);
   refs.pageResizeHandle.addEventListener("pointerdown", startPageResize);
+  refs.canvasSpace.addEventListener("wheel", handleCanvasWheel, { passive: false });
+  refs.layersList.addEventListener("contextmenu", (event) => {
+    const row = event.target.closest("[data-layer-id]");
+    if (row) openLayerContextMenu(event, row.dataset.layerId);
+  });
+  refs.layerContextMenu.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-context-action]");
+    if (action) handleLayerContextAction(action.dataset.contextAction);
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (!refs.layerContextMenu.contains(event.target)) closeLayerContextMenu();
+  });
   refs.undoButton.addEventListener("click", undo);
   refs.redoButton.addEventListener("click", redo);
   document.getElementById("zoomOutButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.max(0.25, state.computedZoom - 0.1) : state.zoom - 0.1));
-  document.getElementById("zoomInButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.min(1, state.computedZoom + 0.1) : state.zoom + 0.1));
-  refs.zoomLabel.addEventListener("click", () => { state.zoomMode = "fit"; renderCanvas(); });
+  document.getElementById("zoomInButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.min(4, state.computedZoom + 0.1) : state.zoom + 0.1));
+  refs.zoomLabel.addEventListener("click", () => {
+    state.zoomMode = "fit";
+    state.panX = 0;
+    state.panY = 0;
+    renderCanvas();
+  });
 
   refs.projectNameInput.addEventListener("change", () => {
     const value = refs.projectNameInput.value.trim() || "Untitled project";
@@ -2078,6 +2229,8 @@ function bindEvents() {
     state.project = createBlankProject();
     state.selectedId = null;
     state.activeDevice = "desktop";
+    state.panX = 0;
+    state.panY = 0;
     resetHistory();
     renderAll();
     schedulePersist();
@@ -2139,8 +2292,37 @@ function bindEvents() {
 
 function setZoom(value) {
   state.zoomMode = "manual";
-  state.zoom = Math.max(0.25, Math.min(1, Math.round(value * 100) / 100));
+  state.zoom = Math.max(0.1, Math.min(4, Math.round(value * 100) / 100));
   renderCanvas();
+}
+
+function zoomAtPoint(event, value) {
+  const oldZoom = state.computedZoom;
+  const before = refs.artboardWrap.getBoundingClientRect();
+  const pointX = (event.clientX - before.left) / oldZoom;
+  const pointY = (event.clientY - before.top) / oldZoom;
+  state.zoomMode = "manual";
+  state.zoom = Math.max(0.1, Math.min(4, Math.round(value * 100) / 100));
+  renderCanvas();
+  const after = refs.artboardWrap.getBoundingClientRect();
+  state.panX += event.clientX - (after.left + pointX * state.computedZoom);
+  state.panY += event.clientY - (after.top + pointY * state.computedZoom);
+  renderCanvas();
+}
+
+function handleCanvasWheel(event) {
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault();
+    const factor = Math.pow(1.1, -event.deltaY / 100);
+    zoomAtPoint(event, state.computedZoom * factor);
+    return;
+  }
+  if (event.deltaX || event.deltaY) {
+    event.preventDefault();
+    state.panX -= event.shiftKey ? event.deltaY : event.deltaX;
+    state.panY -= event.shiftKey ? 0 : event.deltaY;
+    renderCanvas();
+  }
 }
 
 function handleKeydown(event) {
@@ -2174,6 +2356,24 @@ function handleKeydown(event) {
     refs.canvasSpace.classList.add("is-panning");
     return;
   }
+  if (!typing && !modifier && (event.key === "+" || event.key === "=")) {
+    event.preventDefault();
+    setZoom(state.computedZoom + 0.1);
+    return;
+  }
+  if (!typing && !modifier && (event.key === "-" || event.key === "_")) {
+    event.preventDefault();
+    setZoom(state.computedZoom - 0.1);
+    return;
+  }
+  if (!typing && !modifier && event.key === "0") {
+    event.preventDefault();
+    state.zoomMode = "fit";
+    state.panX = 0;
+    state.panY = 0;
+    renderCanvas();
+    return;
+  }
   if (typing || modifier) return;
   if (event.key === "Delete" || event.key === "Backspace") {
     event.preventDefault();
@@ -2190,5 +2390,6 @@ function handleKeydown(event) {
 state.history = [serializeProject()];
 state.historyIndex = 0;
 bindEvents();
+bindTooltips();
 renderAll();
 loadStoredProject();
