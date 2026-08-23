@@ -81,6 +81,7 @@ const state = {
 let dbPromise = null;
 let persistTimer = null;
 let toastTimer = null;
+let gestureStartZoom = null;
 
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -2195,9 +2196,12 @@ function bindEvents() {
     });
   });
 
-  refs.artboard.addEventListener("pointerdown", handleCanvasPointerDown);
+  refs.canvasSpace.addEventListener("pointerdown", handleCanvasPointerDown);
   refs.pageResizeHandle.addEventListener("pointerdown", startPageResize);
   refs.canvasSpace.addEventListener("wheel", handleCanvasWheel, { passive: false });
+  refs.canvasSpace.addEventListener("gesturestart", handleCanvasGestureStart, { passive: false });
+  refs.canvasSpace.addEventListener("gesturechange", handleCanvasGestureChange, { passive: false });
+  refs.canvasSpace.addEventListener("gestureend", handleCanvasGestureEnd, { passive: false });
   refs.layersList.addEventListener("contextmenu", (event) => {
     const row = event.target.closest("[data-layer-id]");
     if (row) openLayerContextMenu(event, row.dataset.layerId);
@@ -2311,18 +2315,42 @@ function zoomAtPoint(event, value) {
 }
 
 function handleCanvasWheel(event) {
-  if (event.ctrlKey || event.metaKey) {
+  const deltaY = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+  // Chromium and Safari expose a two-finger pinch as a modified wheel event.
+  if (event.ctrlKey || event.metaKey || event.altKey) {
     event.preventDefault();
-    const factor = Math.pow(1.1, -event.deltaY / 100);
+    if (!deltaY) return;
+    const factor = Math.pow(1.1, -deltaY / 100);
     zoomAtPoint(event, state.computedZoom * factor);
     return;
   }
-  if (event.deltaX || event.deltaY) {
+  if (event.deltaX || deltaY) {
     event.preventDefault();
-    state.panX -= event.shiftKey ? event.deltaY : event.deltaX;
-    state.panY -= event.shiftKey ? 0 : event.deltaY;
+    state.panX -= event.shiftKey ? deltaY : event.deltaX;
+    state.panY -= event.shiftKey ? 0 : deltaY;
     renderCanvas();
   }
+}
+
+function handleCanvasGestureStart(event) {
+  event.preventDefault();
+  gestureStartZoom = state.computedZoom;
+}
+
+function handleCanvasGestureChange(event) {
+  event.preventDefault();
+  if (!gestureStartZoom || !event.scale) return;
+  const rect = refs.canvasSpace.getBoundingClientRect();
+  const point = {
+    clientX: event.clientX || rect.left + (rect.width / 2),
+    clientY: event.clientY || rect.top + (rect.height / 2),
+  };
+  zoomAtPoint(point, gestureStartZoom * event.scale);
+}
+
+function handleCanvasGestureEnd(event) {
+  event.preventDefault();
+  gestureStartZoom = null;
 }
 
 function handleKeydown(event) {
