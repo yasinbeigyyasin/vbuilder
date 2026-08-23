@@ -14,7 +14,8 @@ Then open <http://localhost:4173>.
 
 ## Version 1
 
-- Desktop, tablet, and mobile canvas presets
+- Fluid desktop output at any desktop width (1440 × 900 is the reference frame)
+- Tablet and mobile canvas presets
 - Automatic responsive adaptation with manual breakpoint overrides
 - Text, images, shapes, sections, and visual buttons
 - Undo/redo and keyboard movement
