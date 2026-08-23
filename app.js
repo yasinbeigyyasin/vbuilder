@@ -1342,7 +1342,7 @@ function generateCss() {
     "* { box-sizing: border-box; }",
     "html, body { margin: 0; min-height: 100%; }",
     `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; }`,
-    `.vb-page { position: relative; width: 100%; max-width: none; height: ${desktop.height}px; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
+    `.vb-page { position: relative; width: 100%; max-width: none; height: auto; aspect-ratio: ${desktop.width} / ${desktop.height}; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
   ];
 
   state.project.nodes.forEach((node) => {
@@ -1355,7 +1355,7 @@ function generateCss() {
   ["tablet", "mobile"].forEach((device) => {
     const preset = PRESETS[device];
     lines.push(`\n@media (max-width: ${preset.media}px) {`);
-    lines.push(`  .vb-page { height: ${preset.height}px; min-height: ${preset.height}px; }`);
+    lines.push(`  .vb-page { height: auto; min-height: 0; aspect-ratio: ${preset.width} / ${preset.height}; }`);
     state.project.nodes.forEach((node) => {
       if (!node.visible) return;
       lines.push(`  .${safeClass(`vb-node-${node.id}`)} {`);
@@ -1368,6 +1368,14 @@ function generateCss() {
   return lines.join("\n");
 }
 
+function percent(value, total) {
+  return `${((num(value) / total) * 100).toFixed(4)}%`;
+}
+
+function fluidSize(value, viewportWidth) {
+  return `calc(${((num(value) / viewportWidth) * 100).toFixed(5)}vw)`;
+}
+
 function horizontalCssLines(node, props, device) {
   const preset = PRESETS[device];
   const behavior = props.responsiveBehavior || node.base.responsiveBehavior || "scale";
@@ -1375,15 +1383,15 @@ function horizontalCssLines(node, props, device) {
   const touchesRightEdge = rightSpace <= 2;
 
   if (behavior === "stretch") {
-    return [`left: ${px(props.x)};`, `right: ${px(rightSpace)};`, "width: auto;"];
+    return [`left: ${percent(props.x, preset.width)};`, `right: ${percent(rightSpace, preset.width)};`, "width: auto;"];
   }
   if (behavior === "right" || touchesRightEdge) {
-    return [`right: ${px(rightSpace)};`, `width: ${px(props.width)};`];
+    return [`right: ${percent(rightSpace, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
   }
   if (behavior === "center") {
-    return ["left: 50%;", `margin-left: ${px(-num(props.width) / 2)};`, `width: ${px(props.width)};`];
+    return ["left: 50%;", `margin-left: ${percent(-num(props.width) / 2, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
   }
-  return [`left: ${px(props.x)};`, `width: ${px(props.width)};`];
+  return [`left: ${percent(props.x, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
 }
 
 function nodeCssLines(node, device) {
@@ -1391,11 +1399,11 @@ function nodeCssLines(node, device) {
   const lines = [
     "position: absolute;",
     ...horizontalCssLines(node, props, device),
-    `top: ${px(props.y)};`,
-    `height: ${px(props.height)};`,
+    `top: ${percent(props.y, PRESETS[device].height)};`,
+    `height: ${percent(props.height, PRESETS[device].height)};`,
     `z-index: ${state.project.nodes.indexOf(node) + 1};`,
     `opacity: ${Math.max(0, Math.min(100, num(props.opacity, 100))) / 100};`,
-    `border-radius: ${Math.max(0, num(props.radius))}px;`,
+    `border-radius: ${fluidSize(Math.max(0, num(props.radius)), PRESETS[device].width)};`,
     num(props.borderWidth) > 0 ? `border: ${num(props.borderWidth)}px solid ${props.borderColor || "transparent"};` : "border: 0 solid transparent;",
     num(props.rotation) ? `transform: rotate(${num(props.rotation)}deg);` : "",
   ].filter(Boolean);
@@ -1404,12 +1412,12 @@ function nodeCssLines(node, device) {
     lines.push(
       `color: ${props.color || "#f2f3f7"};`,
       `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
-      `font-size: ${Math.max(1, num(props.fontSize, 16))}px;`,
+      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 16)), PRESETS[device].width)};`,
       `font-weight: ${props.fontWeight || 500};`,
       `line-height: ${props.lineHeight || 1.2};`,
-      `letter-spacing: ${num(props.letterSpacing)}px;`,
+      `letter-spacing: ${fluidSize(num(props.letterSpacing), PRESETS[device].width)};`,
       `text-align: ${props.textAlign || "left"};`,
-      `padding: ${Math.max(0, num(props.padding))}px;`,
+      `padding: ${fluidSize(Math.max(0, num(props.padding)), PRESETS[device].width)};`,
       "display: flex;",
       "flex-direction: column;",
       `justify-content: ${verticalAlignValue(props.verticalAlign)};`,
@@ -1422,15 +1430,14 @@ function nodeCssLines(node, device) {
       `background: ${props.fill || "#a98cff"};`,
       `color: ${props.color || "#18141f"};`,
       `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
-      `font-size: ${Math.max(1, num(props.fontSize, 13))}px;`,
+      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 13)), PRESETS[device].width)};`,
       `font-weight: ${props.fontWeight || 700};`,
       `line-height: ${props.lineHeight || 1.2};`,
       `text-align: ${props.textAlign || "center"};`,
-      `padding: ${Math.max(0, num(props.padding, 8))}px;`,
+      `padding: ${fluidSize(Math.max(0, num(props.padding, 8)), PRESETS[device].width)};`,
       "display: flex;",
       `align-items: ${verticalAlignValue(props.verticalAlign)};`,
       "justify-content: center;",
-      "font-family: inherit;",
       "cursor: default;",
     );
   } else if (node.type === "image") {
