@@ -1371,6 +1371,7 @@ function startPageResize(event) {
     type: "page-resize",
     startY: event.clientY,
     originHeight: size.height,
+    originTop: refs.artboardWrap.getBoundingClientRect().top,
     scale: state.computedZoom,
     before: serializeProject(),
   };
@@ -1394,6 +1395,11 @@ function onInteractionMove(event) {
   if (interaction.type === "page-resize") {
     const delta = (event.clientY - interaction.startY) / interaction.scale;
     setPageSize("height", interaction.originHeight + delta);
+    renderCanvas();
+    // The canvas is centered for navigation. Compensate for that centering so
+    // resizing from the bottom keeps the top edge fixed like a design frame.
+    const nextTop = refs.artboardWrap.getBoundingClientRect().top;
+    state.panY += interaction.originTop - nextTop;
     renderCanvas();
     return;
   }
