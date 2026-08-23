@@ -43,7 +43,6 @@ const refs = {
   inspectorContent: document.getElementById("inspectorContent"),
   projectNameInput: document.getElementById("projectNameInput"),
   pageTitle: document.getElementById("pageTitle"),
-  saveStatus: document.getElementById("saveStatus"),
   undoButton: document.getElementById("undoButton"),
   redoButton: document.getElementById("redoButton"),
   imageInput: document.getElementById("imageInput"),
@@ -127,11 +126,11 @@ function defaultBaseFor(type, overrides = {}) {
     return commonBase({
       width: 148,
       height: 44,
-      fill: "#a98cff",
-      borderColor: "#a98cff",
+      fill: "#3b82f6",
+      borderColor: "#3b82f6",
       borderWidth: 0,
       radius: 8,
-      color: "#18141f",
+      color: "#f8fbff",
       fontSize: 13,
       fontWeight: 700,
       lineHeight: 1.2,
@@ -215,7 +214,7 @@ function createStarterProject() {
       x: 1120, y: 56, width: 204, height: 18, color: "#979cab", fontSize: 11, fontWeight: 550, lineHeight: 1, textAlign: "right", responsiveBehavior: "right",
     }, { id: "navigation", content: "Canvas   Export   Local" }),
     makeNode("text", "Eyebrow", {
-      x: 112, y: 192, width: 310, height: 20, color: "#a98cff", fontSize: 11, fontWeight: 700, letterSpacing: 1.2, lineHeight: 1, responsiveBehavior: "left",
+      x: 112, y: 192, width: 310, height: 20, color: "#3b82f6", fontSize: 11, fontWeight: 700, letterSpacing: 1.2, lineHeight: 1, responsiveBehavior: "left",
     }, { id: "eyebrow", content: "VISUAL BUILDER · V1" }),
     makeNode("text", "Hero title", {
       x: 112, y: 231, width: 650, height: 154, color: "#f2f3f7", fontSize: 64, fontWeight: 750, lineHeight: 1.03, letterSpacing: -2.2, responsiveBehavior: "left",
@@ -238,7 +237,7 @@ function createStarterProject() {
       },
     }),
     makeNode("button", "Primary button", {
-      x: 112, y: 522, width: 154, height: 46, fill: "#a98cff", color: "#18141f", fontSize: 12, radius: 8, responsiveBehavior: "left",
+      x: 112, y: 522, width: 154, height: 46, fill: "#3b82f6", color: "#f8fbff", fontSize: 12, radius: 8, responsiveBehavior: "left",
     }, {
       id: "hero-button",
       content: "Start designing",
@@ -266,7 +265,7 @@ function createStarterProject() {
       },
     }),
     makeNode("shape", "Preview accent", {
-      x: 900, y: 252, width: 190, height: 10, fill: "#a98cff", radius: 6, responsiveBehavior: "right",
+      x: 900, y: 252, width: 190, height: 10, fill: "#3b82f6", radius: 6, responsiveBehavior: "right",
     }, {
       id: "preview-accent",
       responsive: {
@@ -643,11 +642,11 @@ function createCanvasNode(node, props, index) {
     inner.style.flexDirection = "column";
     element.appendChild(inner);
   } else if (node.type === "button") {
-    element.style.background = props.fill || "#a98cff";
+    element.style.background = props.fill || "#3b82f6";
     const inner = document.createElement("div");
     inner.className = "node-button";
     inner.textContent = node.content || "Button";
-    inner.style.color = props.color || "#18141f";
+    inner.style.color = props.color || "#f8fbff";
     inner.style.fontSize = `${Math.max(1, num(props.fontSize, 13))}px`;
     inner.style.fontWeight = String(props.fontWeight || 700);
     inner.style.lineHeight = String(props.lineHeight || 1.2);
@@ -823,7 +822,7 @@ function renderInspector() {
   if (node.type === "button") {
     markup += `<div class="inspector-section">
       <div class="inspector-section-title"><span>Appearance</span><span class="minor">visual button</span></div>
-      <div class="field-grid">${colorField("Text color", "color", props.color || "#18141f")}</div>
+      <div class="field-grid">${colorField("Text color", "color", props.color || "#f8fbff")}</div>
     </div>`;
   }
 
@@ -1429,8 +1428,8 @@ function nodeCssLines(node, device) {
     );
   } else if (node.type === "button") {
     lines.push(
-      `background: ${props.fill || "#a98cff"};`,
-      `color: ${props.color || "#18141f"};`,
+      `background: ${props.fill || "#3b82f6"};`,
+      `color: ${props.color || "#f8fbff"};`,
       `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
       `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 13)), PRESETS[device].width)};`,
       `font-weight: ${props.fontWeight || 700};`,
@@ -1618,13 +1617,9 @@ function escapeAttr(value) {
 }
 
 function schedulePersist() {
-  refs.saveStatus.textContent = "Saving locally…";
-  refs.saveStatus.classList.add("saving");
   window.clearTimeout(persistTimer);
   persistTimer = window.setTimeout(async () => {
     await persistProject();
-    refs.saveStatus.textContent = "Saved locally";
-    refs.saveStatus.classList.remove("saving");
   }, 260);
 }
 

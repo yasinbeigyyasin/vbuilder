@@ -9,9 +9,9 @@
   --text: #f2f3f7;
   --text-soft: #b6bac5;
   --text-muted: #777c89;
-  --accent: #9b7cf7;
-  --accent-strong: #a98cff;
-  --accent-wash: rgba(155, 124, 247, 0.14);
+  --accent: #2563eb;
+  --accent-strong: #3b82f6;
+  --accent-wash: rgba(59, 130, 246, 0.14);
   --green: #66d9a3;
   --danger: #ef7b91;
   --canvas-space: #0d0e11;
@@ -119,7 +119,6 @@ svg {
 
 .brand-lockup,
 .top-actions,
-.topbar-center,
 .device-switcher,
 .canvas-tools,
 .zoom-control,
@@ -153,7 +152,7 @@ svg {
 .brand-mark span {
   display: block;
   width: 4px;
-  background: #17131f;
+  background: #081a45;
   border-radius: 4px 4px 2px 2px;
 }
 
@@ -183,27 +182,11 @@ svg {
   text-transform: uppercase;
 }
 
-.status-dot,
-.chip-dot {
+.status-dot {
   width: 5px;
   height: 5px;
   background: var(--green);
   border-radius: 50%;
-}
-
-.topbar-center {
-  justify-content: center;
-  flex: 1;
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.save-status {
-  transition: color 160ms ease;
-}
-
-.save-status.saving {
-  color: var(--accent-strong);
 }
 
 .top-actions {
@@ -292,7 +275,7 @@ svg {
 }
 
 .button-primary {
-  color: #18141f;
+  color: #f8fbff;
   background: var(--accent-strong);
   border: 1px solid var(--accent-strong);
 }
@@ -439,7 +422,7 @@ svg {
 .insert-card:hover {
   color: var(--text);
   background: var(--accent-wash);
-  border-color: rgba(155, 124, 247, 0.46);
+  border-color: rgba(59, 130, 246, 0.46);
 }
 
 .insert-icon {
@@ -507,7 +490,7 @@ svg {
 .section-icon i {
   display: block;
   height: 4px;
-  background: rgba(155, 124, 247, 0.35);
+  background: rgba(59, 130, 246, 0.35);
   border: 1px solid var(--accent-strong);
   border-radius: 2px;
 }
@@ -571,9 +554,9 @@ svg {
 }
 
 .layer-row.selected {
-  color: #e9e2ff;
+  color: #dbeafe;
   background: var(--accent-wash);
-  border-color: rgba(155, 124, 247, 0.2);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .layer-icon {
@@ -742,26 +725,12 @@ svg {
 }
 
 .device-tab.active .device-size {
-  color: #aaa0c9;
+  color: #93c5fd;
 }
 
 .canvas-tools {
   justify-content: flex-end;
   gap: 12px;
-}
-
-.auto-layout-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: 10px;
-}
-
-.auto-layout-chip .chip-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--accent-strong);
 }
 
 .zoom-control {
@@ -860,7 +829,7 @@ svg {
 }
 
 .vb-node:hover:not(.is-selected) {
-  outline: 1px solid rgba(155, 124, 247, 0.55);
+  outline: 1px solid rgba(59, 130, 246, 0.55);
   outline-offset: -1px;
 }
 
@@ -939,8 +908,8 @@ svg {
   align-items: center;
   height: 19px;
   padding: 0 6px;
-  color: #e7ddff;
-  background: #6d53c4;
+  color: #eff6ff;
+  background: #1d4ed8;
   border-radius: 3px 3px 3px 0;
   font-size: 9px;
   font-weight: 700;
@@ -956,7 +925,7 @@ svg {
   align-items: center;
   height: 18px;
   padding: 0 5px;
-  color: #c9bcf1;
+  color: #bfdbfe;
   background: rgba(45, 35, 79, 0.92);
   border-radius: 3px;
   font-size: 9px;
@@ -967,8 +936,8 @@ svg {
   position: absolute;
   width: 7px;
   height: 7px;
-  background: #f1ebff;
-  border: 1px solid #7659d3;
+  background: #eff6ff;
+  border: 1px solid #2563eb;
   border-radius: 2px;
   pointer-events: auto;
 }
@@ -981,31 +950,6 @@ svg {
 .resize-handle.s { bottom: -4px; left: calc(50% - 4px); cursor: ns-resize; }
 .resize-handle.sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
 .resize-handle.w { top: calc(50% - 4px); left: -4px; cursor: ew-resize; }
-
-.canvas-help {
-  position: absolute;
-  right: 18px;
-  bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #626773;
-  font-size: 9px;
-}
-
-.help-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-  color: #999eaa;
-  background: #1b1d22;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 9px;
-}
 
 .inspector-top {
   height: 47px;
@@ -1179,7 +1123,7 @@ svg {
   padding: 4px 6px;
   color: var(--accent-strong);
   background: transparent;
-  border: 1px solid rgba(155, 124, 247, 0.24);
+  border: 1px solid rgba(59, 130, 246, 0.24);
   border-radius: 5px;
   font-size: 9px;
 }
@@ -1490,7 +1434,7 @@ svg {
   min-height: 330px;
   margin: 0;
   padding: 18px 20px;
-  color: #cfc8e8;
+  color: #c7d8f5;
   background: #101114;
   border: 0;
   outline: 0;
@@ -1600,10 +1544,6 @@ svg {
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: 220px minmax(420px, 1fr) 270px;
-  }
-
-  .auto-layout-chip {
-    display: none;
   }
 
   .top-actions {
