@@ -1342,7 +1342,7 @@ function generateCss() {
     "* { box-sizing: border-box; }",
     "html, body { margin: 0; min-height: 100%; }",
     `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; }`,
-    `.vb-page { position: relative; width: 100%; max-width: ${desktop.width}px; height: ${desktop.height}px; margin: 0 auto; overflow: hidden; background: ${page.background || "#101114"}; }`,
+    `.vb-page { position: relative; width: 100%; max-width: ${desktop.width}px; height: ${desktop.height}px; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
   ];
 
   state.project.nodes.forEach((node) => {
