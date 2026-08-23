@@ -15,7 +15,7 @@ const TYPE_LABELS = {
   image: "Image",
   shape: "Shape",
   button: "Button",
-  section: "Section",
+  section: "Frame",
 };
 
 const TYPE_ICONS = {
@@ -181,6 +181,7 @@ function makeNode(type, name, base = {}, extra = {}) {
     id: extra.id || uid(type),
     type,
     name: name || TYPE_LABELS[type],
+    parentId: extra.parentId || null,
     visible: extra.visible !== false,
     locked: extra.locked === true,
     base: defaultBaseFor(type, base),
@@ -388,6 +389,7 @@ function normalizeNode(raw) {
     id: String((raw && raw.id) || fallback.id),
     type,
     name: String((raw && raw.name) || TYPE_LABELS[type]),
+    parentId: raw && raw.parentId ? String(raw.parentId) : null,
     base: { ...fallback.base, ...((raw && raw.base) || {}) },
     responsive: raw && raw.responsive && typeof raw.responsive === "object" ? raw.responsive : {},
     content: String((raw && raw.content) || ""),
@@ -464,32 +466,67 @@ function getActivePreset() {
   return PRESETS[state.activeDevice];
 }
 
+function getContainerProps(node, device) {
+  const parent = node.parentId ? getNode(node.parentId) : null;
+  if (!parent || parent.id === node.id) {
+    const preset = PRESETS[device];
+    return { x: 0, y: 0, width: preset.width, height: preset.height };
+  }
+  return getNodeProps(parent, device);
+}
+
+function getAbsoluteProps(node, device = state.activeDevice, seen = new Set()) {
+  const props = { ...getNodeProps(node, device) };
+  if (!node.parentId || seen.has(node.id)) return props;
+  const parent = getNode(node.parentId);
+  if (!parent || parent.id === node.id || seen.has(parent.id)) return props;
+  const nextSeen = new Set(seen);
+  nextSeen.add(node.id);
+  const parentProps = getAbsoluteProps(parent, device, nextSeen);
+  return { ...props, x: num(parentProps.x) + num(props.x), y: num(parentProps.y) + num(props.y) };
+}
+
+function isDescendant(nodeId, ancestorId) {
+  let current = getNode(nodeId);
+  const visited = new Set();
+  while (current && current.parentId && !visited.has(current.id)) {
+    if (current.parentId === ancestorId) return true;
+    visited.add(current.id);
+    current = getNode(current.parentId);
+  }
+  return false;
+}
+
+function getRenderProps(node, device = state.activeDevice) {
+  return node.parentId && getNode(node.parentId) ? getNodeProps(node, device) : getAbsoluteProps(node, device);
+}
+
 function getAutoProps(node, device) {
   const base = { ...node.base };
   if (device === "desktop") return base;
 
-  const target = PRESETS[device];
-  const desktop = PRESETS.desktop;
-  const ratio = target.width / desktop.width;
+  const targetFrame = getContainerProps(node, device);
+  const baseFrame = getContainerProps(node, "desktop");
+  const ratio = targetFrame.width / baseFrame.width;
   const breakpointBehavior = node.responsive && node.responsive[device] && node.responsive[device].responsiveBehavior;
   const behavior = breakpointBehavior || base.responsiveBehavior || "scale";
-  const rightMargin = desktop.width - (Number(base.x) || 0) - (Number(base.width) || 0);
-  const safeMargin = device === "mobile" ? 24 : 32;
+  const rightMargin = baseFrame.width - (Number(base.x) || 0) - (Number(base.width) || 0);
+  const safeMargin = node.parentId ? 16 : (device === "mobile" ? 24 : 32);
   let props = { ...base };
 
   if (behavior === "stretch") {
     props.x = Math.round((Number(base.x) || 0) * ratio);
     const right = Math.round(rightMargin * ratio);
-    props.width = Math.max(20, target.width - props.x - right);
+    props.width = Math.max(20, targetFrame.width - props.x - right);
   } else if (behavior === "center") {
     props.width = Math.max(20, Math.round((Number(base.width) || 0) * ratio));
-    props.x = Math.round((target.width - props.width) / 2);
+    props.x = Math.round((targetFrame.width - props.width) / 2);
   } else if (behavior === "right") {
     props.width = Math.max(20, Math.round((Number(base.width) || 0) * ratio));
-    props.x = target.width - Math.round(rightMargin * ratio) - props.width;
+    props.x = targetFrame.width - Math.round(rightMargin * ratio) - props.width;
   } else if (behavior === "left") {
     props.x = Math.max(safeMargin, Math.round((Number(base.x) || 0) * ratio));
-    props.width = Math.min(Math.max(20, Math.round(Number(base.width) || 20)), target.width - props.x - safeMargin);
+    props.width = Math.min(Math.max(20, Math.round(Number(base.width) || 20)), targetFrame.width - props.x - safeMargin);
   } else {
     props.x = Math.round((Number(base.x) || 0) * ratio);
     props.width = Math.max(20, Math.round((Number(base.width) || 0) * ratio));
@@ -504,8 +541,8 @@ function getAutoProps(node, device) {
   }
 
   if (props.x < 0) props.x = 0;
-  if (props.x + props.width > target.width) {
-    props.width = Math.max(20, target.width - props.x);
+  if (props.x + props.width > targetFrame.width) {
+    props.width = Math.max(20, targetFrame.width - props.x);
   }
 
   return props;
@@ -558,6 +595,18 @@ function renderAll() {
   updateHistoryButtons();
 }
 
+function nodeDepth(node) {
+  let depth = 0;
+  let current = node;
+  const visited = new Set();
+  while (current && current.parentId && !visited.has(current.id)) {
+    depth += 1;
+    visited.add(current.id);
+    current = getNode(current.parentId);
+  }
+  return Math.min(depth, 4);
+}
+
 function renderLayers() {
   if (state.leftTab === "assets") {
     renderAssets();
@@ -574,7 +623,8 @@ function renderLayers() {
   refs.layersList.innerHTML = state.project.nodes.slice().reverse().map((node) => {
     const selected = node.id === state.selectedId ? " selected" : "";
     const muted = node.visible ? "" : " muted";
-    return `<button class="layer-row${selected}${muted}" type="button" data-layer-id="${escapeAttr(node.id)}" title="Select ${escapeAttr(node.name)}">
+    const indent = 6 + (nodeDepth(node) * 14);
+    return `<button class="layer-row${selected}${muted}" style="padding-left:${indent}px" type="button" data-layer-id="${escapeAttr(node.id)}" title="Select ${escapeAttr(node.name)}">
       <span class="layer-icon">${iconSvg(node.type)}</span>
       <span class="layer-label">${escapeHtml(node.name)}</span>
       <span class="layer-type">${TYPE_LABELS[node.type]}</span>
@@ -612,6 +662,21 @@ function renderAssets() {
   });
 }
 
+function renderNodeTree(parentId, container) {
+  const children = state.project.nodes.filter((node) => {
+    const validParent = node.parentId && getNode(node.parentId) ? node.parentId : null;
+    return validParent === parentId && node.visible;
+  });
+
+  children.forEach((node) => {
+    const localProps = getNodeProps(node);
+    const props = parentId ? localProps : getAbsoluteProps(node);
+    const element = createCanvasNode(node, props, state.project.nodes.indexOf(node));
+    container.appendChild(element);
+    if (node.type === "section") renderNodeTree(node.id, element);
+  });
+}
+
 function renderCanvas() {
   const preset = getActivePreset();
   const zoom = calculateZoom();
@@ -629,16 +694,11 @@ function renderCanvas() {
   refs.zoomLabel.textContent = state.zoomMode === "fit" ? "Fit" : `${Math.round(zoom * 100)}%`;
 
   refs.artboard.innerHTML = "";
-  state.project.nodes.forEach((node, index) => {
-    if (!node.visible) return;
-    const props = getNodeProps(node);
-    const element = createCanvasNode(node, props, index);
-    refs.artboard.appendChild(element);
-  });
+  renderNodeTree(null, refs.artboard);
 
   const selected = getNode(state.selectedId);
   if (selected && selected.visible) {
-    const props = getNodeProps(selected);
+    const props = getAbsoluteProps(selected);
     refs.artboard.appendChild(createSelectionBox(selected, props));
   }
 }
@@ -797,6 +857,7 @@ function renderInspector() {
       ${numberField("Width", "width", props.width, 1, 3000)}
       ${numberField("Height", "height", props.height, 1, 3000)}
       ${selectField("Responsive behavior", "responsiveBehavior", props.responsiveBehavior || "scale", [{value:"scale",label:"Scale with viewport"},{value:"left",label:"Keep left aligned"},{value:"right",label:"Keep right aligned"},{value:"center",label:"Keep centered"},{value:"stretch",label:"Stretch to edges"}], "field-full")}
+      ${parentField(node)}
     </div>
     <div class="type-helper">Auto layout creates a starting point. Change any value on tablet or mobile to save a precise breakpoint override.</div>
   </div>`;
@@ -910,6 +971,14 @@ function bindNodeInspector(node) {
     });
   });
 
+  const parentSelect = refs.inspectorContent.querySelector("[data-parent-id]");
+  if (parentSelect) {
+    parentSelect.addEventListener("change", () => {
+      const nextParentId = parentSelect.value || null;
+      applyChange(() => reparentNodePreservingPosition(node, nextParentId));
+    });
+  }
+
   const contentField = refs.inspectorContent.querySelector("[data-node-content]");
   if (contentField) {
     contentField.addEventListener("change", () => {
@@ -983,6 +1052,17 @@ function selectField(label, key, value, options, extraClass = "") {
   return `<label class="field ${extraClass}"><span class="field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
 }
 
+function parentField(node) {
+  if (node.type === "section") {
+    return '<div class="field-full type-helper" style="margin-top:0">Frames can contain other elements. Drag layers into a frame to nest them.</div>';
+  }
+  const options = ['<option value="">Page (no frame)</option>'];
+  state.project.nodes.filter((candidate) => candidate.type === "section" && candidate.id !== node.id && !isDescendant(candidate.id, node.id)).forEach((candidate) => {
+    options.push(`<option value="${escapeAttr(candidate.id)}" ${candidate.id === node.parentId ? "selected" : ""}>${escapeHtml(candidate.name)}</option>`);
+  });
+  return `<label class="field field-full"><span class="field-label">Parent frame</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
+}
+
 function colorField(label, key, value, pageField = false) {
   const safeValue = colorValue(value);
   const attr = pageField ? `data-page-field="${key}"` : `data-field="${key}"`;
@@ -1016,6 +1096,13 @@ function selectNode(id) {
   renderAll();
 }
 
+function getInsertionParent() {
+  const selected = getNode(state.selectedId);
+  if (!selected) return null;
+  if (selected.type === "section") return selected;
+  return selected.parentId ? getNode(selected.parentId) : null;
+}
+
 function addElement(type) {
   if (type === "image") {
     delete refs.imageInput.dataset.replaceId;
@@ -1025,20 +1112,34 @@ function addElement(type) {
 
   const preset = getActivePreset();
   const count = state.project.nodes.length;
+  const parent = getInsertionParent();
   const defaults = {
     text: { x: 80, y: 130 + count * 14, width: 280, height: 72, fontSize: 24 },
     shape: { x: 80, y: 130 + count * 14, width: 240, height: 120 },
     section: { x: 64, y: 120 + count * 12, width: 720, height: 280 },
     button: { x: 80, y: 130 + count * 14, width: 148, height: 44 },
   }[type];
-  const node = makeNode(type, `New ${TYPE_LABELS[type]}`, defaults, { content: type === "text" ? "Your text" : type === "button" ? "Button" : "" });
+
+  if (parent) {
+    const frameProps = getNodeProps(parent);
+    defaults.x = 16;
+    defaults.y = 16;
+    defaults.width = Math.min(defaults.width, Math.max(20, frameProps.width - 32));
+    defaults.height = Math.min(defaults.height, Math.max(20, frameProps.height - 32));
+  }
+
+  const node = makeNode(type, `New ${TYPE_LABELS[type]}`, defaults, {
+    parentId: parent ? parent.id : null,
+    content: type === "text" ? "Your text" : type === "button" ? "Button" : "",
+  });
 
   if (state.activeDevice !== "desktop") {
-    const ratio = preset.width / PRESETS.desktop.width;
+    const localWidth = parent ? getNodeProps(parent).width : preset.width;
+    const ratio = parent ? 1 : preset.width / PRESETS.desktop.width;
     node.responsive[state.activeDevice] = {
-      x: Math.max(24, Math.round(defaults.x * ratio)),
+      x: parent ? defaults.x : Math.max(24, Math.round(defaults.x * ratio)),
       y: defaults.y,
-      width: Math.min(defaults.width, preset.width - 48),
+      width: Math.min(defaults.width, Math.max(20, localWidth - (parent ? 32 : 48))),
       height: defaults.height,
     };
   }
@@ -1047,7 +1148,7 @@ function addElement(type) {
     state.project.nodes.push(node);
     state.selectedId = node.id;
   });
-  showToast(`${TYPE_LABELS[type]} added to canvas`, "success");
+  showToast(`${TYPE_LABELS[type]} added to canvas${parent ? ` inside ${parent.name}` : ""}`, "success");
 }
 
 function handleImageFile(file, replaceId = null) {
@@ -1073,20 +1174,35 @@ function handleImageFile(file, replaceId = null) {
     }
 
     const preset = getActivePreset();
-    const node = makeNode("image", file.name.replace(/\.[^/.]+$/, "") || "Image", {
+    const parent = getInsertionParent();
+    const imageBase = {
       x: state.activeDevice === "mobile" ? 24 : 100,
       y: state.activeDevice === "mobile" ? 160 : 150 + state.project.nodes.length * 10,
       width: state.activeDevice === "mobile" ? preset.width - 48 : 360,
       height: state.activeDevice === "mobile" ? 220 : 240,
       responsiveBehavior: "scale",
-    }, {
+    };
+    if (parent) {
+      const frameProps = getNodeProps(parent);
+      imageBase.x = 16;
+      imageBase.y = 16;
+      imageBase.width = Math.min(imageBase.width, Math.max(20, frameProps.width - 32));
+      imageBase.height = Math.min(imageBase.height, Math.max(20, frameProps.height - 32));
+    }
+    const node = makeNode("image", file.name.replace(/\.[^/.]+$/, "") || "Image", imageBase, {
+      parentId: parent ? parent.id : null,
       content: "",
       src,
       assetName: safeAssetName(file.name),
       alt: file.name.replace(/\.[^/.]+$/, ""),
     });
     if (state.activeDevice !== "desktop") {
-      node.responsive[state.activeDevice] = { x: node.base.x, y: node.base.y, width: node.base.width, height: node.base.height };
+      node.responsive[state.activeDevice] = {
+        x: imageBase.x,
+        y: imageBase.y,
+        width: imageBase.width,
+        height: imageBase.height,
+      };
     }
     applyChange(() => {
       state.project.nodes.push(node);
@@ -1107,6 +1223,18 @@ function deleteSelected() {
   const node = getNode(state.selectedId);
   if (!node) return;
   applyChange(() => {
+    if (node.type === "section") {
+      // Do not strand frame contents at their old local coordinates.
+      state.project.nodes.filter((item) => item.parentId === node.id).forEach((child) => {
+        const positions = {};
+        ["desktop", "tablet", "mobile"].forEach((device) => {
+          const global = getAbsoluteProps(child, device);
+          positions[device] = { x: global.x, y: global.y };
+        });
+        child.parentId = null;
+        ["desktop", "tablet", "mobile"].forEach((device) => setNodeProps(child, positions[device], device));
+      });
+    }
     state.project.nodes = state.project.nodes.filter((item) => item.id !== node.id);
     state.selectedId = null;
   });
@@ -1226,11 +1354,49 @@ function resizedProps(origin, direction, dx, dy, preserveRatio) {
   return { x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) };
 }
 
+function frameAtPoint(x, y, excludedId = null) {
+  const candidates = state.project.nodes.filter((node) => {
+    if (node.type !== "section" || !node.visible || node.id === excludedId) return false;
+    if (excludedId && isDescendant(node.id, excludedId)) return false;
+    const props = getAbsoluteProps(node);
+    return x >= props.x && x <= props.x + props.width && y >= props.y && y <= props.y + props.height;
+  });
+  candidates.sort((first, second) => {
+    const firstProps = getAbsoluteProps(first);
+    const secondProps = getAbsoluteProps(second);
+    return (firstProps.width * firstProps.height) - (secondProps.width * secondProps.height);
+  });
+  return candidates[0] || null;
+}
+
+function reparentNodePreservingPosition(node, parentId, device = state.activeDevice) {
+  const global = getAbsoluteProps(node, device);
+  const parent = parentId ? getNode(parentId) : null;
+  const parentGlobal = parent ? getAbsoluteProps(parent, device) : { x: 0, y: 0 };
+  node.parentId = parent ? parent.id : null;
+  setNodeProps(node, {
+    x: Math.round(global.x - num(parentGlobal.x)),
+    y: Math.round(global.y - num(parentGlobal.y)),
+  }, device);
+}
+
+function maybeReparentAfterDrop(node) {
+  if (!node || node.type === "section") return;
+  const global = getAbsoluteProps(node);
+  const centerX = global.x + (global.width / 2);
+  const centerY = global.y + (global.height / 2);
+  const frame = frameAtPoint(centerX, centerY, node.id);
+  const nextParentId = frame ? frame.id : null;
+  if (nextParentId === (node.parentId || null)) return;
+  reparentNodePreservingPosition(node, nextParentId);
+}
+
 function endInteraction() {
   window.removeEventListener("pointermove", onInteractionMove);
   const interaction = state.interaction;
   state.interaction = null;
   if (!interaction || interaction.type === "pan") return;
+  if (interaction.type === "drag") maybeReparentAfterDrop(getNode(interaction.id));
   const changed = recordHistory(interaction.before);
   if (changed) {
     renderAll();
@@ -1322,7 +1488,10 @@ function generateHtml(inlineAssets, assets) {
   const title = escapeHtml(state.project.name || "VBuilder site");
   const page = state.project.page;
   const assetMap = new Map(assets.map((asset) => [asset.nodeId, asset.name]));
-  const nodes = state.project.nodes.filter((node) => node.visible).map((node) => generateNodeMarkup(node, inlineAssets, assetMap)).join("\n    ");
+  const nodes = state.project.nodes
+    .filter((node) => node.visible && (!node.parentId || !getNode(node.parentId)))
+    .map((node) => generateNodeMarkup(node, inlineAssets, assetMap))
+    .join("\n    ");
   const css = generateCss();
   const script = generateScript();
   if (inlineAssets) {
@@ -1372,6 +1541,13 @@ function generateNodeMarkup(node, inlineAssets = false, assetMap = new Map()) {
     const src = inlineAssets ? node.src : `assets/${assetMap.get(node.id) || assetFileName(node)}`;
     return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(node.alt || "")}">`;
   }
+  if (node.type === "section") {
+    const children = state.project.nodes
+      .filter((child) => child.visible && child.parentId === node.id)
+      .map((child) => generateNodeMarkup(child, inlineAssets, assetMap))
+      .join("\n      ");
+    return `<div class="${className}">${children ? `\n      ${children}\n    ` : ""}</div>`;
+  }
   return `<div class="${className}"></div>`;
 }
 
@@ -1383,7 +1559,7 @@ function generateCss() {
     "* { box-sizing: border-box; }",
     "html, body { margin: 0; min-height: 100%; }",
     `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; }`,
-    `.vb-page { position: relative; width: 100%; max-width: none; height: auto; aspect-ratio: ${desktop.width} / ${desktop.height}; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
+    `.vb-page { position: relative; width: 100%; max-width: none; height: auto; aspect-ratio: ${desktop.width} / ${desktop.height}; margin: 0; overflow: hidden; container-type: inline-size; background: ${page.background || "#101114"}; }`,
   ];
 
   state.project.nodes.forEach((node) => {
@@ -1413,38 +1589,39 @@ function percent(value, total) {
   return `${((num(value) / total) * 100).toFixed(4)}%`;
 }
 
-function fluidSize(value, viewportWidth) {
-  return `calc(${((num(value) / viewportWidth) * 100).toFixed(5)}vw)`;
+function fluidSize(value, containerWidth) {
+  return `calc(${((num(value) / containerWidth) * 100).toFixed(5)}cqw)`;
 }
 
 function horizontalCssLines(node, props, device) {
-  const preset = PRESETS[device];
+  const container = getContainerProps(node, device);
   const behavior = props.responsiveBehavior || node.base.responsiveBehavior || "scale";
-  const rightSpace = preset.width - num(props.x) - num(props.width);
+  const rightSpace = container.width - num(props.x) - num(props.width);
   const touchesRightEdge = rightSpace <= 2;
 
   if (behavior === "stretch") {
-    return [`left: ${percent(props.x, preset.width)};`, `right: ${percent(rightSpace, preset.width)};`, "width: auto;"];
+    return [`left: ${percent(props.x, container.width)};`, `right: ${percent(rightSpace, container.width)};`, "width: auto;"];
   }
   if (behavior === "right" || touchesRightEdge) {
-    return [`right: ${percent(rightSpace, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
+    return [`right: ${percent(rightSpace, container.width)};`, `width: ${percent(props.width, container.width)};`];
   }
   if (behavior === "center") {
-    return ["left: 50%;", `margin-left: ${percent(-num(props.width) / 2, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
+    return ["left: 50%;", `margin-left: ${percent(-num(props.width) / 2, container.width)};`, `width: ${percent(props.width, container.width)};`];
   }
-  return [`left: ${percent(props.x, preset.width)};`, `width: ${percent(props.width, preset.width)};`];
+  return [`left: ${percent(props.x, container.width)};`, `width: ${percent(props.width, container.width)};`];
 }
 
 function nodeCssLines(node, device) {
-  const props = getNodeProps(node, device);
+  const props = getRenderProps(node, device);
+  const container = getContainerProps(node, device);
   const lines = [
     "position: absolute;",
     ...horizontalCssLines(node, props, device),
-    `top: ${percent(props.y, PRESETS[device].height)};`,
-    `height: ${percent(props.height, PRESETS[device].height)};`,
+    `top: ${percent(props.y, container.height)};`,
+    `height: ${percent(props.height, container.height)};`,
     `z-index: ${state.project.nodes.indexOf(node) + 1};`,
     `opacity: ${Math.max(0, Math.min(100, num(props.opacity, 100))) / 100};`,
-    `border-radius: ${fluidSize(Math.max(0, num(props.radius)), PRESETS[device].width)};`,
+    `border-radius: ${fluidSize(Math.max(0, num(props.radius)), container.width)};`,
     num(props.borderWidth) > 0 ? `border: ${num(props.borderWidth)}px solid ${props.borderColor || "transparent"};` : "border: 0 solid transparent;",
     num(props.rotation) ? `transform: rotate(${num(props.rotation)}deg);` : "",
   ].filter(Boolean);
@@ -1453,12 +1630,12 @@ function nodeCssLines(node, device) {
     lines.push(
       `color: ${props.color || "#f2f3f7"};`,
       `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
-      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 16)), PRESETS[device].width)};`,
+      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 16)), container.width)};`,
       `font-weight: ${props.fontWeight || 500};`,
       `line-height: ${props.lineHeight || 1.2};`,
-      `letter-spacing: ${fluidSize(num(props.letterSpacing), PRESETS[device].width)};`,
+      `letter-spacing: ${fluidSize(num(props.letterSpacing), container.width)};`,
       `text-align: ${props.textAlign || "left"};`,
-      `padding: ${fluidSize(Math.max(0, num(props.padding)), PRESETS[device].width)};`,
+      `padding: ${fluidSize(Math.max(0, num(props.padding)), container.width)};`,
       "display: flex;",
       "flex-direction: column;",
       `justify-content: ${verticalAlignValue(props.verticalAlign)};`,
@@ -1471,11 +1648,11 @@ function nodeCssLines(node, device) {
       `background: ${props.fill || "#3b82f6"};`,
       `color: ${props.color || "#f8fbff"};`,
       `font-family: ${props.fontFamily || "Inter, ui-sans-serif, sans-serif"};`,
-      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 13)), PRESETS[device].width)};`,
+      `font-size: ${fluidSize(Math.max(1, num(props.fontSize, 13)), container.width)};`,
       `font-weight: ${props.fontWeight || 700};`,
       `line-height: ${props.lineHeight || 1.2};`,
       `text-align: ${props.textAlign || "center"};`,
-      `padding: ${fluidSize(Math.max(0, num(props.padding, 8)), PRESETS[device].width)};`,
+      `padding: ${fluidSize(Math.max(0, num(props.padding, 8)), container.width)};`,
       "display: flex;",
       `align-items: ${verticalAlignValue(props.verticalAlign)};`,
       "justify-content: center;",
@@ -1493,6 +1670,7 @@ function nodeCssLines(node, device) {
       `background: ${props.fill || "transparent"};`,
       "overflow: hidden;",
     );
+    if (node.type === "section") lines.push("container-type: inline-size;");
   }
   return lines;
 }
