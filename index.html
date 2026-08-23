@@ -10,11 +10,19 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand-lockup">
-          <div class="brand-mark" aria-hidden="true">
-            <span></span><span></span><span></span>
+        <div class="topbar-left">
+          <div class="brand-lockup">
+            <div class="brand-mark" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="brand-name">vbuilder</div>
           </div>
-          <div class="brand-name">vbuilder</div>
+          <div class="topbar-divider"></div>
+          <label class="file-name-wrap">
+            <span class="sr-only">Project name</span>
+            <input id="projectNameInput" class="file-name-input" value="Starter landing page" maxlength="48" />
+            <span class="file-name-chevron" aria-hidden="true">⌄</span>
+          </label>
           <span class="local-badge"><span class="status-dot"></span> local</span>
         </div>
 
@@ -43,37 +51,19 @@
 
       <div class="workspace">
         <aside class="left-panel panel">
-          <div class="panel-header">
-            <span class="panel-kicker">Project</span>
-            <button class="icon-button compact" id="newProjectButton" type="button" title="New project" aria-label="New project">
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
-            </button>
+          <div class="panel-tabs" role="tablist" aria-label="File panel">
+            <button class="panel-tab active" type="button" data-left-tab="layers" role="tab" aria-selected="true">Layers</button>
+            <button class="panel-tab" type="button" data-left-tab="assets" role="tab" aria-selected="false">Assets</button>
           </div>
-          <label class="project-name-wrap">
-            <span class="sr-only">Project name</span>
-            <input id="projectNameInput" class="project-name-input" value="Starter landing page" maxlength="48" />
-            <span class="edit-pencil" aria-hidden="true">
-              <svg viewBox="0 0 20 20"><path d="m13.8 3.4 2.8 2.8M4 16l.7-3.4L13.8 3.5a1.5 1.5 0 0 1 2.1 0l.6.6a1.5 1.5 0 0 1 0 2.1L7.4 15.3 4 16Z" /></svg>
-            </span>
-          </label>
-
-          <div class="insert-section">
-            <div class="section-heading"><span>Insert</span></div>
-            <div class="insert-grid">
-              <button class="insert-card" type="button" data-add="text"><span class="insert-icon text-icon">T</span><span>Text</span></button>
-              <button class="insert-card" type="button" data-add="image"><span class="insert-icon image-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2" /><circle cx="7" cy="7" r="1.3" /><path d="m4.5 14 3.2-3.2 2.2 2.1 1.6-1.5 4 3.6" /></svg></span><span>Image</span></button>
-              <button class="insert-card" type="button" data-add="shape"><span class="insert-icon shape-icon"></span><span>Shape</span></button>
-              <button class="insert-card" type="button" data-add="button"><span class="insert-icon button-icon"><span></span></span><span>Button</span></button>
-              <button class="insert-card" type="button" data-add="section"><span class="insert-icon section-icon"><i></i><i></i><i></i></span><span>Section</span></button>
-            </div>
+          <div class="page-tree">
+            <div class="page-tree-heading"><span>Pages</span><button class="icon-button compact" id="newProjectButton" type="button" title="New project" aria-label="New project"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg></button></div>
+            <button class="page-row active" type="button" aria-label="Current page"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.5h12v11H4zM7 2.5v4M13 2.5v4M4 8h12" /></svg><span id="pageTitle">Landing page</span></button>
           </div>
-
           <div class="layers-section">
-            <div class="section-heading layers-heading"><span>Layers</span><span class="layer-count" id="layerCount">0</span></div>
+            <div class="section-heading layers-heading"><span id="leftPanelHeading">Layers</span><span class="layer-count" id="layerCount">0</span></div>
             <div class="layers-list" id="layersList"></div>
           </div>
-
-            <div class="panel-footer">
+          <div class="panel-footer">
             <div class="footer-actions">
               <button class="footer-link" id="openProjectButton" type="button">Open project</button>
               <button class="footer-link" id="saveProjectButton" type="button">Save project</button>
@@ -83,7 +73,14 @@
 
         <main class="editor-area">
           <div class="editor-toolbar">
-            <div class="breadcrumb"><span class="muted-label">Pages</span><span class="breadcrumb-slash">/</span><span id="pageTitle">Landing page</span></div>
+            <div class="canvas-tool-group" role="toolbar" aria-label="Tools">
+              <button class="canvas-tool active" type="button" data-tool="select" title="Move tool (V)" aria-label="Move tool"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 3 10.5 6.2-5 1.1 2.7 5.1-1.9 1-2.7-5.1-3.6 3.5V3Z" /></svg></button>
+              <button class="canvas-tool" type="button" data-tool="frame" data-add="section" title="Frame" aria-label="Add frame"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6V4h2M14 4h2v2M16 14v2h-2M6 16H4v-2M7 4v12M13 4v12M4 7h12M4 13h12" /></svg></button>
+              <button class="canvas-tool" type="button" data-tool="text" data-add="text" title="Text (T)" aria-label="Add text"><span class="tool-letter">T</span></button>
+              <button class="canvas-tool" type="button" data-tool="shape" data-add="shape" title="Shape" aria-label="Add shape"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" rx="2" /><circle cx="10" cy="10" r="3" /></svg></button>
+              <button class="canvas-tool" type="button" data-tool="image" data-add="image" title="Image" aria-label="Add image"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2" /><circle cx="7" cy="7" r="1.2" /><path d="m4.5 14 3.2-3.2 2.2 2.1 1.6-1.5 4 3.6" /></svg></button>
+              <button class="canvas-tool" type="button" data-tool="button" data-add="button" title="Button" aria-label="Add button"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="6" width="14" height="8" rx="2" /><path d="M7 10h6" /></svg></button>
+            </div>
             <div class="device-switcher" role="tablist" aria-label="Responsive viewport">
               <button class="device-tab active" type="button" data-device="desktop" role="tab" aria-selected="true">
                 <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="10" rx="1.6" /><path d="M7 16.5h6M10 13.5v3" /></svg>
@@ -116,7 +113,12 @@
         </main>
 
         <aside class="right-panel panel">
-          <div class="inspector-top"><span class="panel-kicker">Inspector</span><span class="inspector-mode">Design</span></div>
+          <div class="inspector-tabs" role="tablist" aria-label="Inspector mode">
+            <button class="inspector-tab active" type="button" data-inspector-tab="design" role="tab" aria-selected="true">Design</button>
+            <button class="inspector-tab" type="button" data-inspector-tab="prototype" role="tab" aria-selected="false">Prototype</button>
+            <button class="inspector-tab" type="button" data-inspector-tab="inspect" role="tab" aria-selected="false">Inspect</button>
+            <button class="icon-button compact inspector-menu" type="button" aria-label="Inspector options">⋯</button>
+          </div>
           <div id="inspectorContent"></div>
         </aside>
       </div>

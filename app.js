@@ -40,6 +40,7 @@ const refs = {
   zoomLabel: document.getElementById("zoomLabel"),
   layersList: document.getElementById("layersList"),
   layerCount: document.getElementById("layerCount"),
+  leftPanelHeading: document.getElementById("leftPanelHeading"),
   inspectorContent: document.getElementById("inspectorContent"),
   projectNameInput: document.getElementById("projectNameInput"),
   pageTitle: document.getElementById("pageTitle"),
@@ -66,6 +67,8 @@ const state = {
   historyIndex: -1,
   interaction: null,
   codeFile: "index.html",
+  leftTab: "layers",
+  activeTool: "select",
   spaceDown: false,
 };
 
@@ -541,6 +544,14 @@ function renderAll() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-selected", active ? "true" : "false");
   });
+  document.querySelectorAll("[data-left-tab]").forEach((button) => {
+    const active = button.dataset.leftTab === state.leftTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-tool]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.tool === state.activeTool);
+  });
   renderLayers();
   renderCanvas();
   renderInspector();
@@ -548,6 +559,12 @@ function renderAll() {
 }
 
 function renderLayers() {
+  if (state.leftTab === "assets") {
+    renderAssets();
+    return;
+  }
+
+  refs.leftPanelHeading.textContent = "Layers";
   refs.layerCount.textContent = String(state.project.nodes.length);
   if (!state.project.nodes.length) {
     refs.layersList.innerHTML = '<div class="layer-empty">Your canvas is empty.<br />Add an element to get started.</div>';
@@ -567,6 +584,29 @@ function renderLayers() {
   refs.layersList.querySelectorAll("[data-layer-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.selectedId = row.dataset.layerId;
+      renderAll();
+    });
+  });
+}
+
+function renderAssets() {
+  const assets = state.project.nodes.filter((node) => node.type === "image" && node.src);
+  refs.leftPanelHeading.textContent = "Assets";
+  refs.layerCount.textContent = String(assets.length);
+  if (!assets.length) {
+    refs.layersList.innerHTML = '<div class="layer-empty">No image assets yet.<br />Use the Image tool to add one.</div>';
+    return;
+  }
+
+  refs.layersList.innerHTML = assets.map((node) => `<button class="asset-row" type="button" data-asset-id="${escapeAttr(node.id)}">
+    <span class="asset-thumb"><img src="${escapeAttr(node.src)}" alt="" /></span>
+    <span class="asset-copy"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(node.assetName || "local image")}</small></span>
+  </button>`).join("");
+
+  refs.layersList.querySelectorAll("[data-asset-id]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.selectedId = row.dataset.assetId;
+      state.leftTab = "layers";
       renderAll();
     });
   });
@@ -1720,6 +1760,27 @@ function showToast(message, type = "success") {
 function bindEvents() {
   document.querySelectorAll("[data-add]").forEach((button) => {
     button.addEventListener("click", () => addElement(button.dataset.add));
+  });
+  document.querySelectorAll("[data-tool]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeTool = button.dataset.tool;
+      renderAll();
+    });
+  });
+  document.querySelectorAll("[data-left-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.leftTab = button.dataset.leftTab;
+      renderAll();
+    });
+  });
+  document.querySelectorAll("[data-inspector-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-inspector-tab]").forEach((tab) => {
+        const active = tab === button;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+    });
   });
   document.querySelectorAll("[data-device]").forEach((button) => {
     button.addEventListener("click", () => {
