@@ -1342,7 +1342,7 @@ function generateCss() {
     "* { box-sizing: border-box; }",
     "html, body { margin: 0; min-height: 100%; }",
     `body { background: ${page.background || "#101114"}; color: #f2f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; }`,
-    `.vb-page { position: relative; width: 100%; max-width: ${desktop.width}px; height: ${desktop.height}px; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
+    `.vb-page { position: relative; width: 100%; max-width: none; height: ${desktop.height}px; margin: 0; overflow: hidden; background: ${page.background || "#101114"}; }`,
   ];
 
   state.project.nodes.forEach((node) => {
@@ -1368,13 +1368,30 @@ function generateCss() {
   return lines.join("\n");
 }
 
+function horizontalCssLines(node, props, device) {
+  const preset = PRESETS[device];
+  const behavior = props.responsiveBehavior || node.base.responsiveBehavior || "scale";
+  const rightSpace = preset.width - num(props.x) - num(props.width);
+  const touchesRightEdge = rightSpace <= 2;
+
+  if (behavior === "stretch") {
+    return [`left: ${px(props.x)};`, `right: ${px(rightSpace)};`, "width: auto;"];
+  }
+  if (behavior === "right" || touchesRightEdge) {
+    return [`right: ${px(rightSpace)};`, `width: ${px(props.width)};`];
+  }
+  if (behavior === "center") {
+    return ["left: 50%;", `margin-left: ${px(-num(props.width) / 2)};`, `width: ${px(props.width)};`];
+  }
+  return [`left: ${px(props.x)};`, `width: ${px(props.width)};`];
+}
+
 function nodeCssLines(node, device) {
   const props = getNodeProps(node, device);
   const lines = [
     "position: absolute;",
-    `left: ${px(props.x)};`,
+    ...horizontalCssLines(node, props, device),
     `top: ${px(props.y)};`,
-    `width: ${px(props.width)};`,
     `height: ${px(props.height)};`,
     `z-index: ${state.project.nodes.indexOf(node) + 1};`,
     `opacity: ${Math.max(0, Math.min(100, num(props.opacity, 100))) / 100};`,
