@@ -34,6 +34,7 @@ const HISTORY_LIMIT = 60;
 const refs = {
   artboard: document.getElementById("artboard"),
   artboardWrap: document.getElementById("artboardWrap"),
+  pageResizeHandle: document.getElementById("pageResizeHandle"),
   canvasSpace: document.getElementById("canvasSpace"),
   canvasCaption: document.getElementById("canvasCaption"),
   canvasZoomCaption: document.getElementById("canvasZoomCaption"),
@@ -203,6 +204,7 @@ function createStarterProject() {
       width: 1440,
       height: 900,
       background: "#101114",
+      responsive: {},
     },
     nodes: [],
   };
@@ -358,6 +360,7 @@ function createBlankProject() {
       width: 1440,
       height: 900,
       background: "#101114",
+      responsive: {},
     },
     nodes: [],
   };
@@ -375,6 +378,7 @@ function normalizeProject(raw) {
   project.kind = "vbuilder-project";
   project.page.width = Number(project.page.width) || 1440;
   project.page.height = Number(project.page.height) || 900;
+  project.page.responsive = project.page.responsive && typeof project.page.responsive === "object" ? project.page.responsive : {};
   project.name = String(project.name || "Untitled project");
   project.page.name = String(project.page.name || "Landing page");
   return project;
@@ -466,11 +470,35 @@ function getActivePreset() {
   return PRESETS[state.activeDevice];
 }
 
+function getPageSize(device = state.activeDevice) {
+  const preset = PRESETS[device];
+  const base = device === "desktop"
+    ? { width: state.project.page.width, height: state.project.page.height }
+    : { width: preset.width, height: preset.height };
+  const override = (state.project.page.responsive && state.project.page.responsive[device]) || {};
+  return {
+    width: Math.max(240, Number(override.width ?? base.width) || base.width),
+    height: Math.max(200, Number(override.height ?? base.height) || base.height),
+  };
+}
+
+function setPageSize(key, value, device = state.activeDevice) {
+  const minimum = key === "width" ? 240 : 200;
+  const next = Math.max(minimum, Math.round(Number(value) || minimum));
+  if (device === "desktop") {
+    state.project.page[key] = next;
+    return;
+  }
+  if (!state.project.page.responsive) state.project.page.responsive = {};
+  if (!state.project.page.responsive[device]) state.project.page.responsive[device] = {};
+  state.project.page.responsive[device][key] = next;
+}
+
 function getContainerProps(node, device) {
   const parent = node.parentId ? getNode(node.parentId) : null;
   if (!parent || parent.id === node.id) {
-    const preset = PRESETS[device];
-    return { x: 0, y: 0, width: preset.width, height: preset.height };
+    const page = getPageSize(device);
+    return { x: 0, y: 0, width: page.width, height: page.height };
   }
   const parentProps = getNodeProps(parent, device);
   const border = Math.max(0, num(parentProps.borderWidth));
@@ -624,12 +652,20 @@ function renderLayers() {
 
   refs.leftPanelHeading.textContent = "Layers";
   refs.layerCount.textContent = String(state.project.nodes.length);
+  const pageSelected = state.selectedId === null ? " selected" : "";
+  const pageRow = `<button class="layer-row page-layer${pageSelected}" style="padding-left:6px" type="button" data-select-page="true" title="Select website frame">
+    <span class="layer-icon">${iconSvg("section")}</span>
+    <span class="layer-label">${escapeHtml(state.project.page.name)}</span>
+    <span class="layer-type">Page</span>
+  </button>`;
+
   if (!state.project.nodes.length) {
-    refs.layersList.innerHTML = '<div class="layer-empty">Your canvas is empty.<br />Add an element to get started.</div>';
+    refs.layersList.innerHTML = `${pageRow}<div class="layer-empty">Your canvas is empty.<br />Add an element to get started.</div>`;
+    bindPageLayer();
     return;
   }
 
-  refs.layersList.innerHTML = state.project.nodes.slice().reverse().map((node) => {
+  refs.layersList.innerHTML = pageRow + state.project.nodes.slice().reverse().map((node) => {
     const selected = node.id === state.selectedId ? " selected" : "";
     const muted = node.visible ? "" : " muted";
     const indent = 6 + (nodeDepth(node) * 14);
@@ -640,12 +676,23 @@ function renderLayers() {
     </button>`;
   }).join("");
 
+  bindPageLayer();
   refs.layersList.querySelectorAll("[data-layer-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.selectedId = row.dataset.layerId;
       renderAll();
     });
   });
+}
+
+function bindPageLayer() {
+  const pageRow = refs.layersList.querySelector("[data-select-page]");
+  if (pageRow) {
+    pageRow.addEventListener("click", () => {
+      state.selectedId = null;
+      renderAll();
+    });
+  }
 }
 
 function renderAssets() {
@@ -688,17 +735,18 @@ function renderNodeTree(parentId, container) {
 
 function renderCanvas() {
   const preset = getActivePreset();
+  const size = getPageSize(state.activeDevice);
   const zoom = calculateZoom();
   state.computedZoom = zoom;
-  refs.artboard.style.width = `${preset.width}px`;
-  refs.artboard.style.height = `${preset.height}px`;
+  refs.artboard.style.width = `${size.width}px`;
+  refs.artboard.style.height = `${size.height}px`;
   refs.artboard.style.transform = `scale(${zoom})`;
   refs.artboard.style.background = state.project.page.background || "#101114";
-  refs.artboardWrap.style.width = `${Math.round(preset.width * zoom)}px`;
-  refs.artboardWrap.style.height = `${Math.round(preset.height * zoom)}px`;
+  refs.artboardWrap.style.width = `${Math.round(size.width * zoom)}px`;
+  refs.artboardWrap.style.height = `${Math.round(size.height * zoom)}px`;
   refs.canvasCaption.textContent = preset.fluid
-    ? `${preset.label} · fluid · ${preset.width} × ${preset.height} base`
-    : `${preset.label} · ${preset.width} × ${preset.height}`;
+    ? `${preset.label} · fluid · ${size.width} × ${size.height} base`
+    : `${preset.label} · ${size.width} × ${size.height}`;
   refs.canvasZoomCaption.textContent = state.zoomMode === "fit" ? "Fit to view" : `${Math.round(zoom * 100)}% zoom`;
   refs.zoomLabel.textContent = state.zoomMode === "fit" ? "Fit" : `${Math.round(zoom * 100)}%`;
 
@@ -714,10 +762,10 @@ function renderCanvas() {
 
 function calculateZoom() {
   if (state.zoomMode !== "fit") return state.zoom;
-  const preset = getActivePreset();
+  const size = getPageSize(state.activeDevice);
   const availableWidth = Math.max(300, refs.canvasSpace.clientWidth - 84);
   const availableHeight = Math.max(260, refs.canvasSpace.clientHeight - 95);
-  return Math.max(0.2, Math.min(1, availableWidth / preset.width, availableHeight / preset.height));
+  return Math.max(0.2, Math.min(1, availableWidth / size.width, availableHeight / size.height));
 }
 
 function createCanvasNode(node, props, index) {
@@ -950,18 +998,22 @@ function renderInspector() {
 function pageInspectorMarkup() {
   const page = state.project.page;
   const preset = getActivePreset();
+  const size = getPageSize(state.activeDevice);
+  const customSize = state.activeDevice !== "desktop" && page.responsive && page.responsive[state.activeDevice];
   return `<div class="inspector-empty">
     <span class="empty-icon">${iconSvg("section")}</span>
-    <strong>Page settings</strong>
-    <p>Select an element on the canvas to edit it, or adjust the page settings below.</p>
+    <strong>Website frame</strong>
+    <p>This is the root frame for your exported page. Change its height here or drag the handle at the bottom of the canvas.</p>
   </div>
   <div class="page-settings-card">
-    <div class="inspector-section-title"><span>${escapeHtml(page.name)}</span><span class="minor">single page</span></div>
+    <div class="inspector-section-title"><span>${escapeHtml(page.name)}</span><span class="minor">root frame</span></div>
     <div class="field-grid">
+      ${pageNumberField("Width", "width", size.width, 240, 4000)}
+      ${pageNumberField("Height", "height", size.height, 200, 5000)}
       ${colorField("Page background", "background", page.background || "#101114", true)}
     </div>
-    <div class="page-info-row"><span>Current preset</span><strong>${preset.label}</strong></div>
-    <div class="page-info-row"><span>Canvas size</span><strong>${preset.width} × ${preset.height}</strong></div>
+    <div class="page-info-row"><span>Viewport</span><strong>${preset.label}${preset.fluid ? " · fluid" : ""}</strong></div>
+    <div class="page-info-row"><span>${customSize ? "Custom frame" : "Reference frame"}</span><strong>${size.width} × ${size.height}</strong></div>
   </div>`;
 }
 
@@ -1044,13 +1096,20 @@ function bindPageInspector() {
     field.addEventListener("change", () => {
       const key = field.dataset.pageField;
       const value = readFieldValue(field);
-      applyChange(() => { state.project.page[key] = value; });
+      applyChange(() => {
+        if (key === "width" || key === "height") setPageSize(key, value);
+        else state.project.page[key] = value;
+      });
     });
   });
 }
 
 function numberField(label, key, value, min = -9999, max = 9999, step = "1") {
   return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
+}
+
+function pageNumberField(label, key, value, min = 0, max = 9999, step = "1") {
+  return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-page-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
 }
 
 function textField(label, key, value, extraClass = "") {
@@ -1300,6 +1359,21 @@ function startPan(event) {
   event.preventDefault();
 }
 
+function startPageResize(event) {
+  const size = getPageSize(state.activeDevice);
+  state.interaction = {
+    type: "page-resize",
+    startY: event.clientY,
+    originHeight: size.height,
+    scale: state.computedZoom,
+    before: serializeProject(),
+  };
+  window.addEventListener("pointermove", onInteractionMove);
+  window.addEventListener("pointerup", endInteraction, { once: true });
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 function onInteractionMove(event) {
   const interaction = state.interaction;
   if (!interaction) return;
@@ -1307,6 +1381,13 @@ function onInteractionMove(event) {
   if (interaction.type === "pan") {
     refs.canvasSpace.scrollLeft = interaction.scrollLeft - (event.clientX - interaction.startX);
     refs.canvasSpace.scrollTop = interaction.scrollTop - (event.clientY - interaction.startY);
+    return;
+  }
+
+  if (interaction.type === "page-resize") {
+    const delta = (event.clientY - interaction.startY) / interaction.scale;
+    setPageSize("height", interaction.originHeight + delta);
+    renderCanvas();
     return;
   }
 
@@ -1465,11 +1546,11 @@ function openPreviewModal() {
   const files = generateFiles(true);
   refs.previewFrame.srcdoc = files["index.html"];
   refs.previewDeviceLabel.textContent = PRESETS[state.activeDevice].label;
-  const preset = getActivePreset();
+  const size = getPageSize(state.activeDevice);
   // Keep the iframe at the selected canvas width so the same media query is used
   // in the generated preview (desktop should not accidentally become tablet).
-  refs.previewFrame.style.width = `${preset.width}px`;
-  refs.previewFrame.style.height = `${Math.min(preset.height, 620)}px`;
+  refs.previewFrame.style.width = `${size.width}px`;
+  refs.previewFrame.style.height = `${Math.min(size.height, 620)}px`;
   openModal(refs.previewModal);
 }
 
@@ -1564,7 +1645,7 @@ function generateNodeMarkup(node, inlineAssets = false, assetMap = new Map()) {
 
 function generateCss() {
   const page = state.project.page;
-  const desktop = PRESETS.desktop;
+  const desktop = getPageSize("desktop");
   const lines = [
     "/* Generated by VBuilder — desktop is fluid; 1440 × 900 is the reference frame. */",
     "* { box-sizing: border-box; }",
@@ -1582,8 +1663,9 @@ function generateCss() {
 
   ["tablet", "mobile"].forEach((device) => {
     const preset = PRESETS[device];
+    const size = getPageSize(device);
     lines.push(`\n@media (max-width: ${preset.media}px) {`);
-    lines.push(`  .vb-page { height: auto; min-height: 0; aspect-ratio: ${preset.width} / ${preset.height}; }`);
+    lines.push(`  .vb-page { height: auto; min-height: 0; aspect-ratio: ${size.width} / ${size.height}; }`);
     state.project.nodes.forEach((node) => {
       if (!node.visible) return;
       lines.push(`  .${safeClass(`vb-node-${node.id}`)} {`);
@@ -1980,6 +2062,7 @@ function bindEvents() {
   });
 
   refs.artboard.addEventListener("pointerdown", handleCanvasPointerDown);
+  refs.pageResizeHandle.addEventListener("pointerdown", startPageResize);
   refs.undoButton.addEventListener("click", undo);
   refs.redoButton.addEventListener("click", redo);
   document.getElementById("zoomOutButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.max(0.25, state.computedZoom - 0.1) : state.zoom - 0.1));

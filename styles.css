@@ -2013,3 +2013,35 @@ svg {
   justify-content: flex-start;
   gap: 14px;
 }
+
+/* Root website frame controls. */
+.page-resize-handle {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  color: var(--accent-strong);
+  background: #1e1e1e;
+  border: 1px solid var(--accent-strong);
+  border-radius: 4px 0 0 0;
+  cursor: ns-resize;
+  opacity: 0.82;
+}
+
+.page-resize-handle:hover {
+  background: var(--accent-wash);
+  opacity: 1;
+}
+
+.page-resize-handle span {
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+}
