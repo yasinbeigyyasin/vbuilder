@@ -1211,10 +1211,14 @@ function bindPageInspector() {
       });
     });
   });
+
+  refs.inspectorContent.querySelectorAll("[data-page-scrub-key]").forEach((handle) => {
+    handle.addEventListener("pointerdown", (event) => startPageScrub(event, handle.dataset.pageScrubKey));
+  });
 }
 
 function numberField(label, key, value, min = -9999, max = 9999, step = "1") {
-  return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
+  return `<label class="field inline-field"><span class="inline-field-label" data-scrub-key="${key}">${label}</span><input class="field-input" type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
 }
 
 function compactNumberField(label, key, value, min = -9999, max = 9999, step = "1", suffix = "") {
@@ -1231,15 +1235,15 @@ function transformButton(action, icon, label) {
 }
 
 function pageNumberField(label, key, value, min = 0, max = 9999, step = "1") {
-  return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-page-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
+  return `<label class="field inline-field"><span class="inline-field-label" data-page-scrub-key="${key}">${label}</span><input class="field-input" type="number" data-page-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
 }
 
 function textField(label, key, value, extraClass = "") {
-  return `<label class="field ${extraClass}"><span class="field-label">${label}</span><input class="field-input" type="text" data-field="${key}" data-value-type="string" value="${escapeAttr(value)}" /></label>`;
+  return `<label class="field inline-field ${extraClass}"><span class="inline-field-label">${label}</span><input class="field-input" type="text" data-field="${key}" data-value-type="string" value="${escapeAttr(value)}" /></label>`;
 }
 
 function selectField(label, key, value, options, extraClass = "") {
-  return `<label class="field ${extraClass}"><span class="field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
+  return `<label class="field inline-field ${extraClass}"><span class="inline-field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
 }
 
 function parentField(node) {
@@ -1250,13 +1254,13 @@ function parentField(node) {
   state.project.nodes.filter((candidate) => candidate.type === "section" && candidate.id !== node.id && !isDescendant(candidate.id, node.id)).forEach((candidate) => {
     options.push(`<option value="${escapeAttr(candidate.id)}" ${candidate.id === node.parentId ? "selected" : ""}>${escapeHtml(candidate.name)}</option>`);
   });
-  return `<label class="field field-full"><span class="field-label">Parent frame</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
+  return `<label class="field inline-field field-full"><span class="inline-field-label">Parent</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
 }
 
 function colorField(label, key, value, pageField = false) {
   const safeValue = colorValue(value);
   const attr = pageField ? `data-page-field="${key}"` : `data-field="${key}"`;
-  return `<label class="field"><span class="field-label">${label}</span><span class="color-field"><input class="field-input" type="color" ${attr} data-value-type="string" value="${safeValue}" /><input class="field-input color-hex" type="text" ${attr} data-value-type="string" value="${escapeAttr(value)}" /></span></label>`;
+  return `<label class="field inline-field color-inline-field"><span class="inline-field-label">${label}</span><input class="field-input color-swatch" type="color" ${attr} data-value-type="string" value="${safeValue}" /><input class="field-input color-hex" type="text" ${attr} data-value-type="string" value="${escapeAttr(value)}" /></label>`;
 }
 
 function readFieldValue(field) {
@@ -1467,6 +1471,26 @@ function startScrub(event, node, key) {
   event.stopPropagation();
 }
 
+function startPageScrub(event, key) {
+  const field = event.currentTarget.parentElement?.querySelector(`[data-page-field="${key}"]`);
+  if (!field) return;
+  state.interaction = {
+    type: "page-scrub",
+    key,
+    startX: event.clientX,
+    startValue: num(field.value, getPageSize(state.activeDevice)[key]),
+    min: Number(field.min),
+    max: Number(field.max),
+    step: Number(field.step) || 1,
+    before: serializeProject(),
+  };
+  document.body.classList.add("is-scrubbing");
+  window.addEventListener("pointermove", onInteractionMove);
+  window.addEventListener("pointerup", endInteraction, { once: true });
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 function startDrag(event, id) {
   const node = getNode(id);
   if (!node || node.locked) return;
@@ -1564,6 +1588,17 @@ function onInteractionMove(event) {
     const value = interaction.step < 1 ? Number(bounded.toFixed(2)) : Math.round(bounded);
     setNodeProps(node, { [interaction.key]: value });
     const field = refs.inspectorContent.querySelector(`[data-field="${interaction.key}"]`);
+    if (field) field.value = numberInputValue(value);
+    renderCanvas();
+    return;
+  }
+
+  if (interaction.type === "page-scrub") {
+    const raw = interaction.startValue + ((event.clientX - interaction.startX) * interaction.step);
+    const bounded = Math.max(interaction.min, Math.min(interaction.max, raw));
+    const value = interaction.step < 1 ? Number(bounded.toFixed(2)) : Math.round(bounded);
+    setPageSize(interaction.key, value);
+    const field = refs.inspectorContent.querySelector(`[data-page-field="${interaction.key}"]`);
     if (field) field.value = numberInputValue(value);
     renderCanvas();
     return;

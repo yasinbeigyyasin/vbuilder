@@ -3225,3 +3225,110 @@ body {
   margin: 9px 11px;
   padding: 9px;
 }
+
+/* All right-sidebar fields share one compact inline treatment. */
+.inline-field {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 26px;
+  padding: 0 6px;
+  background: #333333;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.inline-field:focus-within {
+  border-color: #62666e;
+}
+
+.inline-field-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  margin-right: 6px;
+  overflow: hidden;
+  color: #c2c4c9;
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.inline-field-label[data-scrub-key],
+.inline-field-label[data-page-scrub-key] {
+  cursor: ew-resize;
+}
+
+.inline-field .field-input,
+.inline-field .field-select {
+  min-width: 0;
+  flex: 1;
+  height: 24px;
+  padding: 0;
+  color: #f1f2f4;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-size: 10px;
+}
+
+.inline-field .field-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.inline-field .field-input[type="number"]::-webkit-outer-spin-button,
+.inline-field .field-input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.inline-field .field-select {
+  padding-right: 0;
+}
+
+.inline-field.field-full {
+  grid-column: 1 / -1;
+}
+
+.color-inline-field {
+  gap: 5px;
+}
+
+.color-inline-field .inline-field-label {
+  flex: 1;
+}
+
+.color-inline-field .color-swatch {
+  width: 18px;
+  flex: 0 0 18px;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.color-inline-field .color-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-inline-field .color-swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: 3px;
+}
+
+.color-inline-field .color-hex {
+  width: 52px;
+  flex: 0 0 52px;
+  color: #cfd1d6;
+  font-size: 9px;
+}
+
+.field-grid {
+  gap: 6px;
+}
+
+.is-scrubbing .inline-field-label,
+.is-scrubbing .compact-field-label,
+.is-scrubbing .compact-field-icon {
+  color: #fff;
+}
