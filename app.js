@@ -1243,7 +1243,7 @@ function textField(label, key, value, extraClass = "") {
 }
 
 function selectField(label, key, value, options, extraClass = "") {
-  return `<label class="field inline-field ${extraClass}"><span class="inline-field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
+  return `<label class="field inline-field select-inline-field ${extraClass}"><span class="inline-field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
 }
 
 function parentField(node) {
@@ -1254,7 +1254,7 @@ function parentField(node) {
   state.project.nodes.filter((candidate) => candidate.type === "section" && candidate.id !== node.id && !isDescendant(candidate.id, node.id)).forEach((candidate) => {
     options.push(`<option value="${escapeAttr(candidate.id)}" ${candidate.id === node.parentId ? "selected" : ""}>${escapeHtml(candidate.name)}</option>`);
   });
-  return `<label class="field inline-field field-full"><span class="inline-field-label">Parent</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
+  return `<label class="field inline-field select-inline-field field-full"><span class="inline-field-label">Parent</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
 }
 
 function colorField(label, key, value, pageField = false) {

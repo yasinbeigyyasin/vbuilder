@@ -3332,3 +3332,33 @@ body {
 .is-scrubbing .compact-field-icon {
   color: #fff;
 }
+
+/* Stable native select treatment: keep the platform menu, but make the closed control match the inspector. */
+.select-inline-field {
+  position: relative;
+}
+
+.select-inline-field::after {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid #aeb2ba;
+  border-bottom: 1px solid #aeb2ba;
+  content: "";
+  pointer-events: none;
+  transform: translateY(-65%) rotate(45deg);
+}
+
+.select-inline-field .field-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 17px !important;
+  cursor: pointer;
+}
+
+.select-inline-field .field-select option {
+  color: #f1f2f4;
+  background: #25272c;
+}
