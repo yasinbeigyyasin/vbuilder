@@ -9,48 +9,15 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <div class="topbar-left">
-          <div class="brand-lockup">
-            <div class="brand-mark" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
-            <div class="brand-name">vbuilder</div>
-          </div>
-          <div class="topbar-divider"></div>
-          <label class="file-name-wrap">
-            <span class="sr-only">Project name</span>
-            <input id="projectNameInput" class="file-name-input" value="Starter landing page" maxlength="48" />
-            <span class="file-name-chevron" aria-hidden="true">⌄</span>
-          </label>
-          <span class="local-badge"><span class="status-dot"></span> local</span>
-        </div>
-
-        <div class="top-actions">
-          <button class="icon-button" id="undoButton" type="button" title="Undo (Ctrl/Cmd + Z)" aria-label="Undo" disabled>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.2 5.1 3.8 8.5l3.4 3.4M4.2 8.5h6.1a5 5 0 0 1 5 5v1.2" /></svg>
-          </button>
-          <button class="icon-button" id="redoButton" type="button" title="Redo (Ctrl/Cmd + Shift + Z)" aria-label="Redo" disabled>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.8 5.1 3.4 3.4-3.4 3.4M15.8 8.5H9.7a5 5 0 0 0-5 5v1.2" /></svg>
-          </button>
-          <div class="topbar-divider"></div>
-          <button class="button button-quiet" id="codeButton" type="button">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5-4 5 4 5M12.5 5l4 5-4 5M11.2 3.8 8.8 16.2" /></svg>
-            <span>Code</span>
-          </button>
-          <button class="button button-quiet" id="previewButton" type="button">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.7 10s2.7-5 7.3-5 7.3 5 7.3 5-2.7 5-7.3 5-7.3-5-7.3-5Z" /><circle cx="10" cy="10" r="2.1" /></svg>
-            <span>Preview</span>
-          </button>
-          <button class="button button-primary" id="exportButton" type="button">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9M6.5 8.5 10 12l3.5-3.5M4 15.5v1.2h12v-1.2" /></svg>
-            <span>Export ZIP</span>
-          </button>
-        </div>
-      </header>
 
       <div class="workspace">
         <aside class="left-panel panel">
+          <div class="file-title-row">
+            <label class="file-title-wrap">
+              <span class="sr-only">Project name</span>
+              <input id="projectNameInput" class="file-title-input" value="Starter landing page" maxlength="48" />
+            </label>
+          </div>
           <div class="panel-tabs" role="tablist" aria-label="File panel">
             <button class="panel-tab active" type="button" data-left-tab="layers" role="tab" aria-selected="true">Layers</button>
             <button class="panel-tab" type="button" data-left-tab="assets" role="tab" aria-selected="false">Assets</button>
@@ -73,14 +40,7 @@
 
         <main class="editor-area">
           <div class="editor-toolbar">
-            <div class="canvas-tool-group" role="toolbar" aria-label="Tools">
-              <button class="canvas-tool active" type="button" data-tool="select" title="Move tool (V)" aria-label="Move tool"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 3 10.5 6.2-5 1.1 2.7 5.1-1.9 1-2.7-5.1-3.6 3.5V3Z" /></svg></button>
-              <button class="canvas-tool" type="button" data-tool="frame" data-add="section" title="Frame" aria-label="Add frame"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6V4h2M14 4h2v2M16 14v2h-2M6 16H4v-2M7 4v12M13 4v12M4 7h12M4 13h12" /></svg></button>
-              <button class="canvas-tool" type="button" data-tool="text" data-add="text" title="Text (T)" aria-label="Add text"><span class="tool-letter">T</span></button>
-              <button class="canvas-tool" type="button" data-tool="shape" data-add="shape" title="Shape" aria-label="Add shape"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" rx="2" /><circle cx="10" cy="10" r="3" /></svg></button>
-              <button class="canvas-tool" type="button" data-tool="image" data-add="image" title="Image" aria-label="Add image"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2" /><circle cx="7" cy="7" r="1.2" /><path d="m4.5 14 3.2-3.2 2.2 2.1 1.6-1.5 4 3.6" /></svg></button>
-              <button class="canvas-tool" type="button" data-tool="button" data-add="button" title="Button" aria-label="Add button"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="6" width="14" height="8" rx="2" /><path d="M7 10h6" /></svg></button>
-            </div>
+            <div class="toolbar-spacer"></div>
             <div class="device-switcher" role="tablist" aria-label="Responsive viewport">
               <button class="device-tab active" type="button" data-device="desktop" role="tab" aria-selected="true">
                 <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="10" rx="1.6" /><path d="M7 16.5h6M10 13.5v3" /></svg>
@@ -95,13 +55,7 @@
                 <span>Mobile</span><span class="device-size">390</span>
               </button>
             </div>
-            <div class="canvas-tools">
-              <div class="zoom-control">
-                <button class="icon-button compact" id="zoomOutButton" type="button" title="Zoom out" aria-label="Zoom out">−</button>
-                <button class="zoom-label" id="zoomLabel" type="button" title="Fit canvas">Fit</button>
-                <button class="icon-button compact" id="zoomInButton" type="button" title="Zoom in" aria-label="Zoom in">+</button>
-              </div>
-            </div>
+            <div class="toolbar-spacer"></div>
           </div>
 
           <div class="canvas-space" id="canvasSpace">
@@ -110,10 +64,26 @@
               <div class="artboard" id="artboard" aria-label="Website canvas"></div>
               <button class="page-resize-handle" id="pageResizeHandle" type="button" title="Resize website frame" aria-label="Resize website frame"><span></span></button>
             </div>
+            <div class="canvas-bottom-toolbar" role="toolbar" aria-label="Canvas tools">
+              <button class="bottom-tool" id="undoButton" type="button" title="Undo" aria-label="Undo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.2 5.1 3.8 8.5l3.4 3.4M4.2 8.5h6.1a5 5 0 0 1 5 5v1.2" /></svg></button>
+              <button class="bottom-tool" id="redoButton" type="button" title="Redo" aria-label="Redo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.8 5.1 3.4 3.4-3.4 3.4M15.8 8.5H9.7a5 5 0 0 0-5 5v1.2" /></svg></button>
+              <span class="bottom-toolbar-divider"></span>
+              <button class="bottom-tool active" type="button" data-tool="select" title="Select and move" aria-label="Select and move"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 3 10.5 6.2-5 1.1 2.7 5.1-1.9 1-2.7-5.1-3.6 3.5V3Z" /></svg></button>
+              <button class="bottom-tool" type="button" data-tool="frame" data-add="section" title="Frame" aria-label="Add frame"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6V4h2M14 4h2v2M16 14v2h-2M6 16H4v-2M7 4v12M13 4v12M4 7h12M4 13h12" /></svg></button>
+              <button class="bottom-tool" type="button" data-tool="text" data-add="text" title="Text" aria-label="Add text"><span class="tool-letter">T</span></button>
+              <button class="bottom-tool" type="button" data-tool="shape" data-add="shape" title="Shape" aria-label="Add shape"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" rx="2" /><circle cx="10" cy="10" r="3" /></svg></button>
+              <button class="bottom-tool" type="button" data-tool="image" data-add="image" title="Image" aria-label="Add image"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2" /><circle cx="7" cy="7" r="1.2" /><path d="m4.5 14 3.2-3.2 2.2 2.1 1.6-1.5 4 3.6" /></svg></button>
+              <button class="bottom-tool" type="button" data-tool="button" data-add="button" title="Button" aria-label="Add button"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="6" width="14" height="8" rx="2" /><path d="M7 10h6" /></svg></button>
+            </div>
           </div>
         </main>
 
         <aside class="right-panel panel">
+          <div class="sidebar-actions">
+            <button class="button button-quiet" id="codeButton" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5-4 5 4 5M12.5 5l4 5-4 5M11.2 3.8 8.8 16.2" /></svg><span>Code</span></button>
+            <button class="button button-quiet" id="previewButton" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.7 10s2.7-5 7.3-5 7.3 5 7.3 5-2.7 5-7.3 5-7.3-5-7.3-5Z" /><circle cx="10" cy="10" r="2.1" /></svg><span>Preview</span></button>
+            <button class="button button-primary export-sidebar-button" id="exportButton" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9M6.5 8.5 10 12l3.5-3.5M4 15.5v1.2h12v-1.2" /></svg><span>Export ZIP</span></button>
+          </div>
           <div class="inspector-tabs" role="tablist" aria-label="Inspector mode">
             <button class="inspector-tab active" type="button" data-inspector-tab="design" role="tab" aria-selected="true">Design</button>
             <button class="inspector-tab" type="button" data-inspector-tab="prototype" role="tab" aria-selected="false">Prototype</button>

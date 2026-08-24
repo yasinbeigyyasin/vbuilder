@@ -38,7 +38,6 @@ const refs = {
   canvasSpace: document.getElementById("canvasSpace"),
   canvasCaption: document.getElementById("canvasCaption"),
   canvasZoomCaption: document.getElementById("canvasZoomCaption"),
-  zoomLabel: document.getElementById("zoomLabel"),
   layersList: document.getElementById("layersList"),
   layerCount: document.getElementById("layerCount"),
   leftPanelHeading: document.getElementById("leftPanelHeading"),
@@ -755,7 +754,6 @@ function renderCanvas() {
     ? `${preset.label} · fluid · ${size.width} × ${size.height} base`
     : `${preset.label} · ${size.width} × ${size.height}`;
   refs.canvasZoomCaption.textContent = state.zoomMode === "fit" ? "Fit to view" : `${Math.round(zoom * 100)}% zoom`;
-  refs.zoomLabel.textContent = state.zoomMode === "fit" ? "Fit" : `${Math.round(zoom * 100)}%`;
 
   refs.artboard.innerHTML = "";
   renderNodeTree(null, refs.artboard);
@@ -2231,15 +2229,6 @@ function bindEvents() {
   });
   refs.undoButton.addEventListener("click", undo);
   refs.redoButton.addEventListener("click", redo);
-  document.getElementById("zoomOutButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.max(0.25, state.computedZoom - 0.1) : state.zoom - 0.1));
-  document.getElementById("zoomInButton").addEventListener("click", () => setZoom(state.zoomMode === "fit" ? Math.min(4, state.computedZoom + 0.1) : state.zoom + 0.1));
-  refs.zoomLabel.addEventListener("click", () => {
-    state.zoomMode = "fit";
-    state.panX = 0;
-    state.panY = 0;
-    renderCanvas();
-  });
-
   refs.projectNameInput.addEventListener("change", () => {
     const value = refs.projectNameInput.value.trim() || "Untitled project";
     applyChange(() => { state.project.name = value; });
