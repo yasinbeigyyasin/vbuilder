@@ -2369,3 +2369,36 @@ body {
 .save-status {
   font-size: 11px;
 }
+
+/* Larger, easier-to-hit bottom tool dock. Icons use an Apple SF Regular / Icons8-like line weight. */
+.canvas-bottom-toolbar {
+  gap: 3px;
+  padding: 6px;
+  border-color: #505050;
+  border-radius: 9px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.46);
+}
+
+.bottom-tool {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+}
+
+.bottom-tool svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 1.35;
+}
+
+.bottom-tool .tool-letter {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.bottom-toolbar-divider {
+  height: 26px;
+  margin: 0 5px;
+  background: #4a4a4a;
+}
