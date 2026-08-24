@@ -44,6 +44,7 @@ const LUCIDE_PATHS = {
   undo: '<path d="m9 14-5-5 5-5" /><path d="M4 9h9a6 6 0 0 1 6 6v1" />',
   redo: '<path d="m15 14 5-5-5-5" /><path d="M20 9h-9a6 6 0 0 0-6 6v1" />',
   pointer: '<path d="m5 3 13 8-6 1 3 6-2 1-3-6-5 5z" />',
+  hand: '<path d="M18 11V7a1 1 0 0 0-2 0v3M16 8V5a1 1 0 0 0-2 0v5M14 8V4a1 1 0 0 0-2 0v6M12 9V6a1 1 0 0 0-2 0v7l-2-2a1.4 1.4 0 0 0-2 2l3 4a4 4 0 0 0 3.2 1.6H14a4 4 0 0 0 4-4v-3" />',
   frame: '<path d="M6 3H3v3M18 3h3v3M21 18v3h-3M3 18v3h3M8 3v18M16 3v18M3 8h18M3 16h18" />',
   type: '<path d="M4 5V3h16v2M12 3v18M8 21h8" />',
   square: '<rect x="4" y="4" width="16" height="16" rx="2" />',
@@ -1677,7 +1678,7 @@ function endInteraction() {
 }
 
 function handleCanvasPointerDown(event) {
-  if (event.button === 1 || state.spaceDown) {
+  if (event.button === 1 || state.spaceDown || state.activeTool === "pan") {
     startPan(event);
     return;
   }

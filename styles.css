@@ -2829,3 +2829,399 @@ body.is-scrubbing * {
   cursor: ew-resize !important;
   user-select: none !important;
 }
+
+/* v1.1 product polish: quieter surfaces, clearer hierarchy, and compact controls. */
+:root {
+  --bg: #121315;
+  --panel: #1b1c20;
+  --panel-raised: #222429;
+  --panel-soft: #2a2c31;
+  --border: #303238;
+  --border-strong: #484b54;
+  --text: #f1f3f6;
+  --text-soft: #c5c8ce;
+  --text-muted: #858a94;
+  --accent: #0d99ff;
+  --accent-strong: #2fa7ff;
+  --accent-wash: rgba(13, 153, 255, 0.14);
+  --canvas-space: #292b2f;
+  --font: Inter, sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.35;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+.workspace {
+  grid-template-columns: 248px minmax(440px, 1fr) 300px;
+}
+
+.left-panel,
+.right-panel {
+  background: var(--panel);
+}
+
+.left-panel {
+  border-right-color: #303238;
+}
+
+.right-panel {
+  border-left-color: #303238;
+}
+
+.file-title-row {
+  display: flex;
+  height: 72px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 12px;
+  background: #191a1e;
+  border-bottom: 1px solid #303238;
+}
+
+.mini-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 22px;
+  color: #dfe3e9;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.mini-brand-mark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 18px;
+  height: 18px;
+  padding: 3px 2px;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.mini-brand-mark i {
+  display: block;
+  width: 3px;
+  background: #07192e;
+  border-radius: 2px;
+}
+
+.mini-brand-mark i:nth-child(1) { height: 6px; }
+.mini-brand-mark i:nth-child(2) { height: 10px; }
+.mini-brand-mark i:nth-child(3) { height: 12px; }
+
+.mini-local-dot {
+  width: 5px;
+  height: 5px;
+  margin-left: 2px;
+  background: #66d9a3;
+  border-radius: 50%;
+}
+
+.file-title-input {
+  height: 25px;
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+.panel-tabs,
+.inspector-head {
+  background: #1b1c20;
+}
+
+.panel-tabs {
+  height: 40px;
+  padding: 0 9px;
+}
+
+.panel-tab {
+  height: 40px;
+  font-size: 11px;
+}
+
+.page-tree {
+  padding: 9px 8px 8px;
+}
+
+.page-tree-heading {
+  height: 22px;
+  font-size: 10px;
+}
+
+.page-row {
+  height: 28px;
+  font-size: 11px;
+}
+
+.layers-section {
+  padding: 10px 8px 8px;
+}
+
+.layers-heading {
+  padding-bottom: 7px;
+}
+
+.layer-row {
+  min-height: 29px;
+}
+
+.layer-label {
+  font-size: 11px;
+}
+
+.layer-type {
+  font-size: 9px;
+}
+
+.layers-list {
+  padding-bottom: 96px;
+}
+
+.panel-footer {
+  padding: 9px 12px 10px;
+}
+
+.footer-link {
+  font-size: 10px;
+}
+
+.editor-toolbar {
+  height: 46px;
+  min-height: 46px;
+  background: #1b1c20;
+}
+
+.device-switcher {
+  background: #24262b;
+  border-color: #3c3f47;
+}
+
+.device-tab {
+  height: 26px;
+  font-size: 10px;
+}
+
+.canvas-space {
+  background-color: var(--canvas-space);
+  background-image: radial-gradient(rgba(255,255,255,0.08) 0.7px, transparent 0.7px);
+  background-size: 18px 18px;
+}
+
+.canvas-caption {
+  color: #b8bdc6;
+  font-size: 10px;
+}
+
+.artboard-wrap {
+  box-shadow: 0 18px 42px rgba(0,0,0,0.42);
+}
+
+.canvas-bottom-toolbar {
+  gap: 2px;
+  padding: 5px;
+  background: #1c1e22;
+  border-color: #4b4f58;
+  border-radius: 8px;
+}
+
+.bottom-tool {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.bottom-tool svg {
+  width: 21px;
+  height: 21px;
+}
+
+.bottom-toolbar-divider {
+  height: 24px;
+  margin: 0 4px;
+  background: #42454d;
+}
+
+.page-resize-handle {
+  background: transparent;
+}
+
+.right-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.sidebar-actions {
+  min-height: 43px;
+  padding: 7px 8px;
+  background: #1b1c20;
+}
+
+.sidebar-actions .button {
+  height: 28px;
+  border-radius: 5px;
+}
+
+.inspector-head {
+  height: 37px;
+  padding: 0 12px;
+  color: #f0f2f5;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.inspector-section {
+  padding: 9px 11px 0;
+}
+
+.inspector-section + .inspector-section {
+  margin-top: 7px;
+  padding-top: 9px;
+}
+
+.selected-section {
+  padding-top: 9px;
+  padding-bottom: 1px;
+}
+
+.selected-heading {
+  gap: 7px;
+}
+
+.selected-type-icon {
+  width: 23px;
+  height: 23px;
+  border-radius: 5px;
+}
+
+.selected-name input {
+  font-size: 11px;
+}
+
+.breakpoint-section {
+  padding-top: 6px;
+}
+
+.breakpoint-banner {
+  min-height: 26px;
+  padding: 4px 7px;
+}
+
+.breakpoint-banner strong,
+.breakpoint-state {
+  font-size: 9px;
+}
+
+.design-inspector-section {
+  padding-top: 10px;
+}
+
+.design-inspector-section + .design-inspector-section {
+  padding-top: 10px;
+}
+
+.design-group-heading {
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.design-subheading {
+  margin-bottom: 5px;
+  color: #b9bdc5;
+  font-size: 10px;
+}
+
+.alignment-grid {
+  gap: 3px;
+  margin-bottom: 11px;
+}
+
+.alignment-button,
+.rotation-action {
+  height: 25px;
+  border-radius: 4px;
+}
+
+.alignment-button svg,
+.rotation-action svg {
+  width: 14px;
+  height: 14px;
+}
+
+.compact-field-row,
+.rotation-row {
+  gap: 5px;
+  margin-bottom: 11px;
+}
+
+.compact-number-field {
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 4px;
+}
+
+.compact-field-label,
+.compact-field-icon,
+.compact-field-suffix {
+  font-size: 10px;
+}
+
+.compact-number-field input {
+  height: 22px;
+  font-size: 11px;
+}
+
+.rotation-actions {
+  grid-template-columns: repeat(3, 26px);
+  gap: 3px;
+}
+
+.rotation-action {
+  width: 26px;
+  height: 26px;
+}
+
+.design-inspector-section .field-grid {
+  gap: 5px;
+}
+
+.design-inspector-section .field-label,
+.inspector-section .field-label {
+  margin-bottom: 3px;
+  color: #b9bdc5;
+  font-size: 9px;
+}
+
+.design-inspector-section .field-input,
+.design-inspector-section .field-select,
+.inspector-section .field-input,
+.inspector-section .field-select {
+  height: 26px;
+  padding-right: 6px;
+  padding-left: 6px;
+  font-size: 10px;
+}
+
+.inspector-section-title {
+  margin-bottom: 7px;
+  font-size: 10px;
+}
+
+.textarea-field {
+  min-height: 54px;
+  padding: 6px;
+  font-size: 10px;
+}
+
+.page-settings-card {
+  margin: 9px 11px;
+  padding: 9px;
+}
