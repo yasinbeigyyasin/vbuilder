@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1e1e1e" />
+    <title>VBuilder — design to code</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app" id="app">
+
+      <!-- ---------------------------------------------------------- left rail -->
+      <nav class="left-rail" id="leftRail" aria-label="Panel switcher">
+        <div class="rail-logo" aria-hidden="true"><span>V</span></div>
+        <button class="rail-btn active" type="button" data-panel="layers" data-tip="Layers" aria-label="Layers"><i data-icon="layers"></i></button>
+        <button class="rail-btn" type="button" data-panel="assets" data-tip="Assets" aria-label="Assets"><i data-icon="image"></i></button>
+        <button class="rail-btn" type="button" data-panel="elements" data-tip="Elements &amp; templates" aria-label="Elements"><i data-icon="grid"></i></button>
+        <button class="rail-btn" type="button" data-panel="pages" data-tip="Pages" aria-label="Pages"><i data-icon="file-text"></i></button>
+        <span class="rail-spacer"></span>
+        <button class="rail-btn" type="button" id="shortcutsBtn" data-tip="Keyboard shortcuts  (?)" aria-label="Keyboard shortcuts"><i data-icon="keyboard"></i></button>
+      </nav>
+
+      <!-- --------------------------------------------------------- left panel -->
+      <aside class="left-panel" id="leftPanel" aria-label="Project panel">
+        <div class="panel-head">
+          <label class="project-field">
+            <span class="sr-only">Project name</span>
+            <input id="projectName" type="text" value="Untitled project" maxlength="48" spellcheck="false" />
+          </label>
+          <div class="panel-head-actions">
+            <button class="icon-btn" type="button" id="newProjectBtn" data-tip="New project" aria-label="New project"><i data-icon="plus"></i></button>
+            <button class="icon-btn" type="button" id="saveProjectBtn" data-tip="Save project file  (⌘S)" aria-label="Save project"><i data-icon="save"></i></button>
+            <button class="icon-btn" type="button" id="openProjectBtn" data-tip="Open project file" aria-label="Open project"><i data-icon="folder"></i></button>
+          </div>
+        </div>
+        <div class="panel-title-row">
+          <h2 id="leftPanelTitle">Layers</h2>
+          <input id="leftPanelSearch" class="panel-search" type="search" placeholder="Search layers…" aria-label="Search" />
+        </div>
+        <div class="panel-body">
+          <div class="layers-list" id="layersList"></div>
+          <div class="assets-list" id="assetsList" hidden></div>
+          <div class="elements-body" id="elementsBody" hidden></div>
+          <div class="pages-list" id="pagesList" hidden></div>
+        </div>
+      </aside>
+
+      <div class="splitter" id="splitLeft" role="separator" aria-orientation="vertical" aria-label="Resize left panel" data-tip="Drag to resize · double-click to reset"></div>
+
+      <!-- ------------------------------------------------------------- editor -->
+      <main class="editor">
+        <div class="editor-top">
+          <div class="top-spacer"></div>
+          <div class="device-tabs" id="deviceTabs" role="tablist" aria-label="Viewport">
+            <button class="device-tab active" type="button" data-device="desktop" role="tab" aria-selected="true"><i data-icon="monitor"></i><span>Desktop</span></button>
+            <button class="device-tab" type="button" data-device="tablet" role="tab" aria-selected="false"><i data-icon="tablet"></i><span>Tablet</span></button>
+            <button class="device-tab" type="button" data-device="mobile" role="tab" aria-selected="false"><i data-icon="smartphone"></i><span>Mobile</span></button>
+          </div>
+          <div class="top-spacer"></div>
+          <div class="top-actions" id="topActions">
+            <button class="btn quiet" type="button" id="codeBtn"><i data-icon="code"></i><span>Code</span></button>
+            <button class="btn quiet" type="button" id="previewBtn"><i data-icon="eye"></i><span>Preview</span></button>
+            <button class="btn primary" type="button" id="exportBtn"><i data-icon="download"></i><span>Export</span></button>
+          </div>
+        </div>
+
+        <div class="canvas-viewport" id="canvasViewport">
+          <div class="ruler ruler-top" id="rulerTop" hidden></div>
+          <div class="ruler ruler-left" id="rulerLeft" hidden></div>
+
+          <div class="artboard-wrap" id="artboardWrap">
+            <div class="scale-layer" id="scaleLayer">
+              <div class="artboard" id="artboard" role="application" aria-label="Design canvas"></div>
+              <svg class="guides" id="guides" aria-hidden="true"></svg>
+              <div class="overlay" id="overlay"></div>
+            </div>
+            <button class="page-resize-handle" id="pageResizeHandle" type="button" aria-label="Resize page frame"><span></span></button>
+          </div>
+
+          <div class="canvas-caption"><span id="canvasCaption">Desktop</span><span class="caption-sep"></span><span id="zoomCaption">Fit</span></div>
+
+          <div class="tool-dock" id="toolDock" role="toolbar" aria-label="Tools">
+            <button class="tool" type="button" data-tool="undo" id="undoBtn" data-tip="Undo  (⌘Z)" aria-label="Undo" disabled><i data-icon="undo"></i></button>
+            <button class="tool" type="button" data-tool="redo" id="redoBtn" data-tip="Redo  (⌘⇧Z)" aria-label="Redo" disabled><i data-icon="redo"></i></button>
+            <span class="dock-divider"></span>
+            <button class="tool active" type="button" data-tool="select" data-tip="Move  (V)" aria-label="Move tool"><i data-icon="pointer"></i></button>
+            <button class="tool" type="button" data-tool="hand" data-tip="Pan  (H or hold Space)" aria-label="Pan tool"><i data-icon="hand"></i></button>
+            <span class="dock-divider"></span>
+            <button class="tool" type="button" data-tool="frame" data-add="frame" data-tip="Frame  (F) — right-click for more" aria-label="Frame"><i data-icon="frame"></i></button>
+            <button class="tool" type="button" data-tool="rect" data-add="rect" data-tip="Rectangle  (R)" aria-label="Rectangle"><i data-icon="square"></i></button>
+            <button class="tool" type="button" data-tool="shape" data-add="ellipse" data-tip="Shapes — right-click for ellipse, line, arrow, star" aria-label="Shapes"><i data-icon="circle"></i></button>
+            <button class="tool" type="button" data-tool="text" data-add="text" data-tip="Text  (T) — right-click for text styles" aria-label="Text"><i data-icon="type"></i></button>
+            <button class="tool" type="button" data-tool="media" data-add="image" data-tip="Image — right-click for icons" aria-label="Image"><i data-icon="image"></i></button>
+            <button class="tool" type="button" data-tool="button" data-add="button" data-tip="Button  (B) — interactive" aria-label="Button"><i data-icon="rectangle-horizontal"></i></button>
+            <span class="dock-divider"></span>
+            <button class="tool" type="button" id="paletteBtn" data-tip="Command palette  (⌘K)" aria-label="Command palette"><i data-icon="zap"></i></button>
+          </div>
+
+          <div class="canvas-controls">
+            <button class="icon-btn" type="button" id="gridToggle" data-pref="showGrid" data-tip="Grid" aria-label="Toggle grid"><i data-icon="grid"></i></button>
+            <button class="icon-btn" type="button" id="snapToggle" data-pref="snap" data-tip="Snap to objects" aria-label="Toggle snapping"><i data-icon="magnet"></i></button>
+            <button class="icon-btn" type="button" id="rulerToggle" data-pref="showRulers" data-tip="Rulers" aria-label="Toggle rulers"><i data-icon="ruler"></i></button>
+            <button class="icon-btn" type="button" id="outlineToggle" data-pref="showOutline" data-tip="Interactive outlines" aria-label="Toggle interactive outlines"><i data-icon="mouse"></i></button>
+            <span class="ctrl-divider"></span>
+            <button class="icon-btn" type="button" id="zoomOutBtn" data-tip="Zoom out  (−)" aria-label="Zoom out"><i data-icon="minus"></i></button>
+            <button class="zoom-value" type="button" id="zoomValue" data-tip="Zoom level — click for presets">100%</button>
+            <button class="icon-btn" type="button" id="zoomInBtn" data-tip="Zoom in  (+)" aria-label="Zoom in"><i data-icon="plus"></i></button>
+            <button class="icon-btn" type="button" id="fitBtn" data-tip="Zoom to fit  (0)" aria-label="Zoom to fit"><i data-icon="minimize"></i></button>
+          </div>
+        </div>
+
+        <div class="status-bar" id="statusBar"></div>
+      </main>
+
+      <div class="splitter" id="splitRight" role="separator" aria-orientation="vertical" aria-label="Resize inspector" data-tip="Drag to resize · double-click to reset"></div>
+
+      <!-- ------------------------------------------------------------ inspector -->
+      <aside class="right-panel" id="inspector" aria-label="Inspector">
+        <div class="inspector-tabs" id="inspectorTabs" role="tablist" aria-label="Inspector">
+          <button class="tab active" type="button" data-tab="design" role="tab" aria-selected="true">Design</button>
+          <button class="tab" type="button" data-tab="prototype" role="tab" aria-selected="false">Prototype</button>
+          <button class="tab" type="button" data-tab="inspect" role="tab" aria-selected="false">Inspect</button>
+          <button class="icon-btn inspector-collapse" type="button" id="inspectorCollapseBtn" data-tip="Hide inspector" aria-label="Hide inspector"><i data-icon="chevron-right"></i></button>
+        </div>
+        <div class="inspector-body" id="inspectorBody"></div>
+      </aside>
+    </div>
+
+    <button class="inspector-reopen" type="button" id="inspectorReopenBtn" data-tip="Show inspector" aria-label="Show inspector"><i data-icon="chevron-left"></i></button>
+
+    <!-- ------------------------------------------------------------- overlays -->
+    <div class="palette hidden" id="palette" role="dialog" aria-label="Command palette">
+      <div class="palette-box">
+        <input id="paletteInput" type="text" placeholder="Search commands, tools, blocks…" autocomplete="off" spellcheck="false" aria-label="Command" />
+        <div class="palette-results" id="paletteResults"></div>
+      </div>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+    <div class="modal-backdrop hidden" id="codeModal" aria-hidden="true">
+      <section class="modal code-modal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
+        <header class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Generated output</span>
+            <h2 id="codeTitle">Your website code <span class="code-lang" id="codeLangLabel">HTML + CSS + JS</span></h2>
+          </div>
+          <div class="modal-header-actions">
+            <button class="btn quiet small code-copy" type="button">Copy file</button>
+            <button class="icon-btn" type="button" data-close-modal="code" aria-label="Close"><i data-icon="x"></i></button>
+          </div>
+        </header>
+        <div class="file-tabs" id="codeTabs"></div>
+        <textarea class="code-output" id="codeOutput" readonly spellcheck="false" aria-label="Generated code"></textarea>
+        <footer class="modal-footer">
+          <span class="modal-note">Every export comes from the same document — change the canvas and regenerate.</span>
+          <button class="btn primary" type="button" id="codeExportBtn" data-close-modal="code">Close</button>
+        </footer>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="previewModal" aria-hidden="true">
+      <section class="modal preview-modal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+        <header class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Live render</span>
+            <h2 id="previewTitle">Preview <span class="code-lang" id="previewLabel"></span></h2>
+          </div>
+          <div class="modal-header-actions">
+            <button class="btn quiet small preview-refresh" type="button"><i data-icon="refresh"></i><span>Reload</span></button>
+            <button class="icon-btn" type="button" data-close-modal="preview" aria-label="Close"><i data-icon="x"></i></button>
+          </div>
+        </header>
+        <div class="preview-frame-wrap"><iframe id="previewFrame" title="Generated website preview" sandbox="allow-scripts"></iframe></div>
+        <footer class="modal-footer">
+          <span class="modal-note">This is the generated HTML, CSS and runtime — not the editor canvas.</span>
+          <button class="btn primary" type="button" data-close-modal="preview">Close</button>
+        </footer>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="exportModal" aria-hidden="true">
+      <section class="modal export-modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+        <header class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Export</span>
+            <h2 id="exportTitle">Choose an output format</h2>
+          </div>
+          <button class="icon-btn" type="button" data-close-modal="export" aria-label="Close"><i data-icon="x"></i></button>
+        </header>
+        <div class="export-options" id="exportOptions"></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="shortcutsModal" aria-hidden="true">
+      <section class="modal shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+        <header class="modal-header">
+          <div><span class="modal-eyebrow">Reference</span><h2 id="shortcutsTitle">Keyboard shortcuts</h2></div>
+          <button class="icon-btn" type="button" data-close-modal="shortcuts" aria-label="Close"><i data-icon="x"></i></button>
+        </header>
+        <div class="shortcuts-body"></div>
+      </section>
+    </div>
+
+    <input id="fileInput" type="file" accept="image/*,.svg,.avif,.ico,.bmp,.webp,.tif,.tiff" multiple hidden />
+    <input id="fontFileInput" type="file" accept=".woff2,.woff,.ttf,.otf,font/*" hidden />
+    <input id="projectInput" type="file" accept=".vbuilder,.json,application/json" hidden />
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
