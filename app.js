@@ -2204,10 +2204,20 @@ function bindEvents() {
 
   refs.canvasSpace.addEventListener("pointerdown", handleCanvasPointerDown);
   refs.pageResizeHandle.addEventListener("pointerdown", startPageResize);
-  refs.canvasSpace.addEventListener("wheel", handleCanvasWheel, { passive: false });
-  refs.canvasSpace.addEventListener("gesturestart", handleCanvasGestureStart, { passive: false });
-  refs.canvasSpace.addEventListener("gesturechange", handleCanvasGestureChange, { passive: false });
-  refs.canvasSpace.addEventListener("gestureend", handleCanvasGestureEnd, { passive: false });
+  // Capture modified wheel events before the browser turns a touchpad pinch
+  // into page zoom. Different browsers target these events at different levels.
+  document.addEventListener("wheel", (event) => {
+    if (event.target.closest?.("#canvasSpace")) handleCanvasWheel(event);
+  }, { passive: false, capture: true });
+  document.addEventListener("gesturestart", (event) => {
+    if (event.target.closest?.("#canvasSpace")) handleCanvasGestureStart(event);
+  }, { passive: false, capture: true });
+  document.addEventListener("gesturechange", (event) => {
+    if (event.target.closest?.("#canvasSpace")) handleCanvasGestureChange(event);
+  }, { passive: false, capture: true });
+  document.addEventListener("gestureend", (event) => {
+    if (event.target.closest?.("#canvasSpace")) handleCanvasGestureEnd(event);
+  }, { passive: false, capture: true });
   refs.layersList.addEventListener("contextmenu", (event) => {
     const row = event.target.closest("[data-layer-id]");
     if (row) openLayerContextMenu(event, row.dataset.layerId);
@@ -2323,8 +2333,9 @@ function zoomAtPoint(event, value) {
 function handleCanvasWheel(event) {
   const deltaY = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
   // Chromium and Safari expose a two-finger pinch as a modified wheel event.
-  if (event.ctrlKey || event.metaKey || event.altKey) {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.getModifierState?.("Control")) {
     event.preventDefault();
+    event.stopPropagation();
     if (!deltaY) return;
     const factor = Math.pow(1.1, -deltaY / 100);
     zoomAtPoint(event, state.computedZoom * factor);

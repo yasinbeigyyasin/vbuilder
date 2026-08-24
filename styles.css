@@ -2168,3 +2168,8 @@ svg {
   border: 0;
   border-radius: 3px;
 }
+
+.canvas-space {
+  touch-action: none;
+  overscroll-behavior: none;
+}
