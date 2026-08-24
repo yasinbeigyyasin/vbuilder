@@ -103,6 +103,27 @@
       <button class="context-danger" type="button" data-context-action="delete" role="menuitem">Delete</button>
     </div>
 
+    <div class="color-popover hidden" id="colorPopover" role="dialog" aria-label="Choose color">
+      <div class="color-popover-title">Color</div>
+      <div class="color-swatch-grid">
+        <button type="button" data-color-choice="#FFFFFF" style="--swatch:#FFFFFF" aria-label="White"></button>
+        <button type="button" data-color-choice="#E5E7EB" style="--swatch:#E5E7EB" aria-label="Light gray"></button>
+        <button type="button" data-color-choice="#9CA3AF" style="--swatch:#9CA3AF" aria-label="Gray"></button>
+        <button type="button" data-color-choice="#4B5563" style="--swatch:#4B5563" aria-label="Dark gray"></button>
+        <button type="button" data-color-choice="#111827" style="--swatch:#111827" aria-label="Ink"></button>
+        <button type="button" data-color-choice="#0D99FF" style="--swatch:#0D99FF" aria-label="Blue"></button>
+        <button type="button" data-color-choice="#2563EB" style="--swatch:#2563EB" aria-label="Royal blue"></button>
+        <button type="button" data-color-choice="#60A5FA" style="--swatch:#60A5FA" aria-label="Sky blue"></button>
+        <button type="button" data-color-choice="#14B8A6" style="--swatch:#14B8A6" aria-label="Teal"></button>
+        <button type="button" data-color-choice="#22C55E" style="--swatch:#22C55E" aria-label="Green"></button>
+        <button type="button" data-color-choice="#F59E0B" style="--swatch:#F59E0B" aria-label="Amber"></button>
+        <button type="button" data-color-choice="#EF4444" style="--swatch:#EF4444" aria-label="Red"></button>
+        <button type="button" data-color-choice="#EC4899" style="--swatch:#EC4899" aria-label="Pink"></button>
+        <button type="button" data-color-choice="#8B5CF6" style="--swatch:#8B5CF6" aria-label="Violet"></button>
+      </div>
+      <div class="color-popover-input"><input id="colorPopoverHex" type="text" value="#FFFFFF" aria-label="Hex color" maxlength="7" /><button id="colorPopoverApply" type="button">Apply</button></div>
+    </div>
+
     <div class="toast-region" id="toastRegion" aria-live="polite"></div>
 
     <div class="modal-backdrop hidden" id="codeModal" aria-hidden="true">

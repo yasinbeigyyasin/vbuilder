@@ -62,6 +62,7 @@ const LUCIDE_PATHS = {
   "align-top": '<path d="M6 4v16M12 4v11M18 4v16" />',
   "align-middle": '<path d="M6 4v16M12 7v10M18 4v16" />',
   "align-bottom": '<path d="M6 4v16M12 9v11M18 4v16" />',
+  "chevron-down": '<path d="m6 9 6 6 6-6" />',
 };
 
 const ICON_ALIASES = {
@@ -97,6 +98,9 @@ const refs = {
   toastRegion: document.getElementById("toastRegion"),
   layerContextMenu: document.getElementById("layerContextMenu"),
   moveToPageAction: document.getElementById("moveToPageAction"),
+  colorPopover: document.getElementById("colorPopover"),
+  colorPopoverHex: document.getElementById("colorPopoverHex"),
+  colorPopoverApply: document.getElementById("colorPopoverApply"),
   codeModal: document.getElementById("codeModal"),
   codeOutput: document.getElementById("codeOutput"),
   previewModal: document.getElementById("previewModal"),
@@ -114,6 +118,7 @@ const state = {
   panX: 0,
   panY: 0,
   contextNodeId: null,
+  colorTarget: null,
   history: [],
   historyIndex: -1,
   interaction: null,
@@ -1110,7 +1115,45 @@ function transformNode(node, action) {
   }
 }
 
+let openSelect = null;
+
+function closeCustomSelects() {
+  if (openSelect) {
+    openSelect.classList.remove("open");
+    const trigger = openSelect.querySelector(".select-trigger");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+    openSelect = null;
+  }
+}
+
+function bindCustomSelects(root = refs.inspectorContent) {
+  root.querySelectorAll("[data-custom-select]").forEach((container) => {
+    const trigger = container.querySelector(".select-trigger");
+    const native = container.querySelector(".custom-select-native");
+    if (!trigger || !native) return;
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (openSelect === container) {
+        closeCustomSelects();
+        return;
+      }
+      closeCustomSelects();
+      openSelect = container;
+      container.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+    });
+    container.querySelectorAll("[data-select-value]").forEach((option) => {
+      option.addEventListener("click", () => {
+        native.value = option.dataset.selectValue;
+        native.dispatchEvent(new Event("change", { bubbles: true }));
+        closeCustomSelects();
+      });
+    });
+  });
+}
+
 function bindNodeInspector(node) {
+  bindCustomSelects();
   refs.inspectorContent.querySelectorAll("[data-field]").forEach((field) => {
     field.addEventListener("change", () => {
       const key = field.dataset.field;
@@ -1201,6 +1244,7 @@ function bindNodeInspector(node) {
 }
 
 function bindPageInspector() {
+  bindCustomSelects();
   refs.inspectorContent.querySelectorAll("[data-page-field]").forEach((field) => {
     field.addEventListener("change", () => {
       const key = field.dataset.pageField;
@@ -1243,7 +1287,13 @@ function textField(label, key, value, extraClass = "") {
 }
 
 function selectField(label, key, value, options, extraClass = "") {
-  return `<label class="field inline-field ${extraClass}"><span class="inline-field-label">${label}</span><select class="field-select" data-field="${key}" data-value-type="string">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
+  const selected = options.find((option) => String(option.value) === String(value)) || options[0] || { value: "", label: "" };
+  return `<div class="field inline-field select-inline-field ${extraClass}" data-custom-select>
+    <span class="inline-field-label">${label}</span>
+    <select class="field-select custom-select-native" data-field="${key}" data-value-type="string" tabindex="-1" aria-hidden="true">${options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(value) ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select>
+    <button class="select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(selected.label)}</span>${iconSvg("chevron-down")}</button>
+    <div class="select-menu" role="listbox">${options.map((option) => `<button class="select-option${String(option.value) === String(value) ? " selected" : ""}" type="button" role="option" data-select-value="${escapeAttr(option.value)}">${escapeHtml(option.label)}</button>`).join("")}</div>
+  </div>`;
 }
 
 function parentField(node) {
@@ -1254,13 +1304,25 @@ function parentField(node) {
   state.project.nodes.filter((candidate) => candidate.type === "section" && candidate.id !== node.id && !isDescendant(candidate.id, node.id)).forEach((candidate) => {
     options.push(`<option value="${escapeAttr(candidate.id)}" ${candidate.id === node.parentId ? "selected" : ""}>${escapeHtml(candidate.name)}</option>`);
   });
-  return `<label class="field inline-field field-full"><span class="inline-field-label">Parent</span><select class="field-select" data-parent-id="true">${options.join("")}</select></label>`;
+  const selectedLabel = node.parentId ? (state.project.nodes.find((candidate) => candidate.id === node.parentId)?.name || "Page") : "Page (no frame)";
+  return `<div class="field inline-field select-inline-field field-full" data-custom-select>
+    <span class="inline-field-label">Parent</span>
+    <select class="field-select custom-select-native" data-parent-id="true" data-value-type="string" tabindex="-1" aria-hidden="true">${options.join("")}</select>
+    <button class="select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(selectedLabel)}</span>${iconSvg("chevron-down")}</button>
+    <div class="select-menu" role="listbox">${options.map((option) => {
+      const valueMatch = option.match(/value="([^"]*)"/);
+      const value = valueMatch ? valueMatch[1] : "";
+      const label = option.replace(/<[^>]+>/g, "");
+      return `<button class="select-option${value === (node.parentId || "") ? " selected" : ""}" type="button" role="option" data-select-value="${escapeAttr(value)}">${escapeHtml(label)}</button>`;
+    }).join("")}</div>
+  </div>`;
 }
 
 function colorField(label, key, value, pageField = false) {
   const safeValue = colorValue(value);
   const attr = pageField ? `data-page-field="${key}"` : `data-field="${key}"`;
-  return `<label class="field inline-field color-inline-field"><span class="inline-field-label">${label}</span><input class="field-input color-swatch" type="color" ${attr} data-value-type="string" value="${safeValue}" /><input class="field-input color-hex" type="text" ${attr} data-value-type="string" value="${escapeAttr(value)}" /></label>`;
+  const target = pageField ? `data-color-page="true"` : `data-color-node-id="${escapeAttr(state.selectedId || "")}"`;
+  return `<label class="field inline-field color-inline-field"><span class="inline-field-label">${label}</span><button class="color-swatch-button" type="button" data-color-trigger="true" data-color-key="${key}" ${target} data-color-value="${safeValue}" aria-label="Choose ${escapeAttr(label)}" style="--swatch:${safeValue}"></button><input class="field-input color-hex" type="text" ${attr} data-value-type="string" value="${escapeAttr(value)}" /></label>`;
 }
 
 function readFieldValue(field) {
@@ -2307,6 +2369,47 @@ function closeLayerContextMenu() {
   refs.layerContextMenu.classList.add("hidden");
 }
 
+function closeColorPopover() {
+  state.colorTarget = null;
+  if (refs.colorPopover) refs.colorPopover.classList.add("hidden");
+}
+
+function openColorPopover(trigger) {
+  const isPage = trigger.dataset.colorPage === "true";
+  state.colorTarget = {
+    key: trigger.dataset.colorKey,
+    isPage,
+    nodeId: isPage ? null : trigger.dataset.colorNodeId,
+  };
+  refs.colorPopoverHex.value = trigger.dataset.colorValue || "#FFFFFF";
+  refs.colorPopover.classList.remove("hidden");
+  const rect = trigger.getBoundingClientRect();
+  const popoverWidth = 184;
+  const popoverHeight = 188;
+  const left = Math.max(8, Math.min(window.innerWidth - popoverWidth - 8, rect.right - popoverWidth));
+  const top = rect.bottom + popoverHeight + 8 < window.innerHeight ? rect.bottom + 6 : rect.top - popoverHeight - 6;
+  refs.colorPopover.style.left = `${left}px`;
+  refs.colorPopover.style.top = `${Math.max(8, top)}px`;
+}
+
+function applyColorValue(value) {
+  const next = String(value || "").trim();
+  if (!/^#[0-9a-fA-F]{6}$/.test(next)) {
+    showToast("Use a six-digit hex color", "error");
+    return;
+  }
+  const target = state.colorTarget;
+  if (!target) return;
+  applyChange(() => {
+    if (target.isPage) state.project.page[target.key] = next;
+    else {
+      const node = getNode(target.nodeId);
+      if (node) setNodeProps(node, { [target.key]: next });
+    }
+  });
+  closeColorPopover();
+}
+
 function openLayerContextMenu(event, id) {
   if (!id) {
     closeLayerContextMenu();
@@ -2429,6 +2532,21 @@ function bindEvents() {
   });
   document.addEventListener("pointerdown", (event) => {
     if (!refs.layerContextMenu.contains(event.target)) closeLayerContextMenu();
+    if (!event.target.closest?.("[data-custom-select]")) closeCustomSelects();
+    if (!refs.colorPopover?.contains(event.target) && !event.target.closest?.("[data-color-trigger]")) closeColorPopover();
+  });
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest?.("[data-color-trigger]");
+    if (trigger) {
+      openColorPopover(trigger);
+      return;
+    }
+    const choice = event.target.closest?.("[data-color-choice]");
+    if (choice) applyColorValue(choice.dataset.colorChoice);
+  });
+  refs.colorPopoverApply.addEventListener("click", () => applyColorValue(refs.colorPopoverHex.value));
+  refs.colorPopoverHex.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") applyColorValue(refs.colorPopoverHex.value);
   });
   refs.undoButton.addEventListener("click", undo);
   refs.redoButton.addEventListener("click", redo);
@@ -2585,6 +2703,8 @@ function handleKeydown(event) {
   if (event.key === "Escape") {
     closeModal(refs.codeModal);
     closeModal(refs.previewModal);
+    closeColorPopover();
+    closeCustomSelects();
     return;
   }
   if (event.code === "Space" && !typing) {
