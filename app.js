@@ -1124,6 +1124,10 @@ function bindNodeInspector(node) {
     });
   });
 
+  refs.inspectorContent.querySelectorAll("[data-scrub-key]").forEach((handle) => {
+    handle.addEventListener("pointerdown", (event) => startScrub(event, node, handle.dataset.scrubKey));
+  });
+
   refs.inspectorContent.querySelectorAll("[data-align-axis]").forEach((button) => {
     button.addEventListener("click", () => {
       applyChange(() => alignNode(node, button.dataset.alignAxis, button.dataset.alignValue));
@@ -1213,7 +1217,7 @@ function numberField(label, key, value, min = -9999, max = 9999, step = "1") {
 }
 
 function compactNumberField(label, key, value, min = -9999, max = 9999, step = "1", suffix = "") {
-  const leading = key === "rotation" ? `<span class="compact-field-icon">${iconSvg("rotate")}</span>` : `<span class="compact-field-label">${label}</span>`;
+  const leading = key === "rotation" ? `<span class="compact-field-icon" data-scrub-key="${key}">${iconSvg("rotate")}</span>` : `<span class="compact-field-label" data-scrub-key="${key}">${label}</span>`;
   return `<label class="compact-number-field">${leading}<input type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" aria-label="${escapeAttr(label || key)}" />${suffix ? `<span class="compact-field-suffix">${suffix}</span>` : ""}</label>`;
 }
 
@@ -1441,6 +1445,27 @@ function deleteSelected() {
   showToast(`${node.name} deleted`, "success");
 }
 
+function startScrub(event, node, key) {
+  const field = event.currentTarget.parentElement?.querySelector(`[data-field="${key}"]`);
+  if (!field) return;
+  state.interaction = {
+    type: "scrub",
+    id: node.id,
+    key,
+    startX: event.clientX,
+    startValue: num(field.value, num(getNodeProps(node)[key])),
+    min: Number(field.min),
+    max: Number(field.max),
+    step: Number(field.step) || 1,
+    before: serializeProject(),
+  };
+  document.body.classList.add("is-scrubbing");
+  window.addEventListener("pointermove", onInteractionMove);
+  window.addEventListener("pointerup", endInteraction, { once: true });
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 function startDrag(event, id) {
   const node = getNode(id);
   if (!node || node.locked) return;
@@ -1526,6 +1551,19 @@ function onInteractionMove(event) {
     // resizing from the bottom keeps the top edge fixed like a design frame.
     const nextTop = refs.artboardWrap.getBoundingClientRect().top;
     state.panY += interaction.originTop - nextTop;
+    renderCanvas();
+    return;
+  }
+
+  if (interaction.type === "scrub") {
+    const node = getNode(interaction.id);
+    if (!node) return;
+    const raw = interaction.startValue + ((event.clientX - interaction.startX) * interaction.step);
+    const bounded = Math.max(interaction.min, Math.min(interaction.max, raw));
+    const value = interaction.step < 1 ? Number(bounded.toFixed(2)) : Math.round(bounded);
+    setNodeProps(node, { [interaction.key]: value });
+    const field = refs.inspectorContent.querySelector(`[data-field="${interaction.key}"]`);
+    if (field) field.value = numberInputValue(value);
     renderCanvas();
     return;
   }
@@ -1626,6 +1664,7 @@ function endInteraction() {
   window.removeEventListener("pointermove", onInteractionMove);
   const interaction = state.interaction;
   state.interaction = null;
+  document.body.classList.remove("is-scrubbing");
   if (!interaction || interaction.type === "pan") return;
   if (interaction.type === "drag") maybeReparentAfterDrop(getNode(interaction.id));
   const changed = recordHistory(interaction.before);
