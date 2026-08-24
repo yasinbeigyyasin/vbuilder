@@ -2560,3 +2560,214 @@ body {
 .selected-section {
   padding-bottom: 2px;
 }
+
+/* Tight inspector pass: compact controls with the density of a design tool. */
+.right-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  color: #f5f5f5;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.sidebar-actions {
+  min-height: 43px;
+  padding: 6px 8px;
+}
+
+.sidebar-actions .button {
+  height: 28px;
+  font-size: 10px;
+}
+
+.inspector-section {
+  padding: 10px 11px 0;
+}
+
+.inspector-section + .inspector-section {
+  margin-top: 8px;
+  padding-top: 10px;
+}
+
+.selected-section {
+  padding-top: 10px;
+  padding-bottom: 1px;
+}
+
+.selected-heading {
+  gap: 7px;
+}
+
+.selected-type-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+
+.selected-type-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.selected-name input {
+  font-size: 11px;
+}
+
+.selected-name small {
+  margin-top: 1px;
+  font-size: 9px;
+}
+
+.breakpoint-section {
+  padding-top: 7px;
+}
+
+.breakpoint-banner {
+  min-height: 28px;
+  padding: 5px 7px;
+  border-radius: 4px;
+}
+
+.breakpoint-banner strong,
+.breakpoint-state {
+  font-size: 10px;
+}
+
+.breakpoint-banner .reset-button {
+  height: 20px;
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+.design-inspector-section {
+  padding-top: 11px;
+}
+
+.design-inspector-section + .design-inspector-section {
+  padding-top: 12px;
+}
+
+.design-group-heading {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.design-subheading {
+  margin-bottom: 5px;
+  font-size: 10px;
+}
+
+.alignment-grid {
+  gap: 3px;
+  margin-bottom: 13px;
+}
+
+.alignment-button,
+.rotation-action {
+  height: 27px;
+  border-radius: 4px;
+}
+
+.alignment-button svg,
+.rotation-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+.compact-field-row,
+.rotation-row {
+  gap: 6px;
+  margin-bottom: 13px;
+}
+
+.compact-number-field {
+  height: 29px;
+  padding: 0 7px;
+  border-radius: 4px;
+}
+
+.compact-field-label,
+.compact-field-icon,
+.compact-field-suffix {
+  font-size: 11px;
+}
+
+.compact-field-label,
+.compact-field-icon {
+  min-width: 14px;
+  margin-right: 5px;
+}
+
+.compact-number-field input {
+  height: 25px;
+  font-size: 11px;
+}
+
+.compact-field-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.rotation-actions {
+  grid-template-columns: repeat(3, 29px);
+  gap: 3px;
+}
+
+.rotation-action {
+  width: 29px;
+  height: 29px;
+}
+
+.design-inspector-section .field-grid {
+  gap: 6px;
+}
+
+.design-inspector-section .field-label,
+.inspector-section .field-label {
+  margin-bottom: 4px;
+  font-size: 9px;
+}
+
+.design-inspector-section .field-input,
+.design-inspector-section .field-select,
+.inspector-section .field-input,
+.inspector-section .field-select {
+  height: 28px;
+  padding-right: 6px;
+  padding-left: 7px;
+  font-size: 10px;
+}
+
+.inspector-section-title {
+  margin-bottom: 8px;
+  font-size: 10px;
+}
+
+.textarea-field {
+  min-height: 60px;
+  padding: 7px;
+  font-size: 10px;
+}
+
+.compact-empty {
+  padding: 13px 12px 2px;
+  text-align: left;
+}
+
+.compact-empty strong {
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-settings-card {
+  margin: 10px 11px;
+  padding: 10px;
+}

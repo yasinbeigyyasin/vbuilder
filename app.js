@@ -943,10 +943,7 @@ function renderInspector() {
   const custom = hasBreakpointOverride(node);
   const device = PRESETS[state.activeDevice];
   const resetButton = state.activeDevice === "desktop" ? "" : `<button class="reset-button" type="button" data-reset-breakpoint="true">Reset</button>`;
-  const bannerTitle = state.activeDevice === "desktop" ? "Base styles" : (custom ? `${device.label} override` : "Auto layout");
-  const bannerText = state.activeDevice === "desktop"
-    ? "The starting values for every viewport."
-    : (custom ? `${Object.keys(node.responsive[state.activeDevice] || {}).length} custom values on this viewport.` : "Inherited from desktop and adapted automatically.");
+  const bannerTitle = state.activeDevice === "desktop" ? "Base" : (custom ? "Custom" : "Auto");
 
   let markup = `<div class="inspector-section selected-section">
     <div class="selected-heading">
@@ -955,7 +952,7 @@ function renderInspector() {
     </div>
   </div>
   <div class="inspector-section breakpoint-section">
-    <div class="breakpoint-banner"><div class="breakpoint-banner-copy"><strong>${bannerTitle}</strong><span>${bannerText}</span></div>${resetButton}</div>
+    <div class="breakpoint-banner"><strong>${device.label}</strong><span class="breakpoint-state">${bannerTitle}</span>${resetButton}</div>
   </div>
   <div class="inspector-section design-inspector-section">
     <div class="design-group-heading">Position</div>
@@ -995,12 +992,11 @@ function renderInspector() {
       ${selectField("Mode", "responsiveBehavior", props.responsiveBehavior || "scale", [{value:"scale",label:"Scale with viewport"},{value:"left",label:"Keep left aligned"},{value:"right",label:"Keep right aligned"},{value:"center",label:"Keep centered"},{value:"stretch",label:"Stretch to edges"}], "field-full")}
       ${parentField(node)}
     </div>
-    <div class="type-helper">Change a value on tablet or mobile to save a precise breakpoint override.</div>
   </div>`;
 
   if (node.type === "text" || node.type === "button") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Content</span><span class="minor">${node.type === "button" ? "visual only in v1" : "text"}</span></div>
+      <div class="inspector-section-title"><span>Content</span></div>
       <textarea class="field-input textarea-field" data-node-content="true" aria-label="Text content">${escapeHtml(node.content)}</textarea>
       <div class="field-grid" style="margin-top:10px">
         ${numberField("Font size", "fontSize", props.fontSize, 1, 240)}
@@ -1015,7 +1011,7 @@ function renderInspector() {
 
   if (node.type === "image") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Image</span><span class="minor">${node.src ? "asset loaded" : "no asset"}</span></div>
+      <div class="inspector-section-title"><span>Image</span></div>
       <button class="button button-quiet image-replace-button" type="button" data-replace-image="true">${node.src ? "Replace image" : "Choose image"}</button>
       ${node.assetName ? `<div class="asset-name">${escapeHtml(node.assetName)}</div>` : ""}
       <div class="field-grid" style="margin-top:10px">
@@ -1028,7 +1024,7 @@ function renderInspector() {
 
   if (node.type !== "text" && node.type !== "image") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Fill & border</span><span class="minor">appearance</span></div>
+      <div class="inspector-section-title"><span>Fill & border</span></div>
       <div class="field-grid">
         ${colorField("Fill", "fill", props.fill || "#252832")}
         ${colorField("Border", "borderColor", props.borderColor || "#353946")}
@@ -1038,7 +1034,7 @@ function renderInspector() {
     </div>`;
   } else if (node.type === "image") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Frame</span><span class="minor">appearance</span></div>
+      <div class="inspector-section-title"><span>Frame</span></div>
       <div class="field-grid">
         ${colorField("Fallback fill", "fill", props.fill || "#1c1f27")}
         ${colorField("Border", "borderColor", props.borderColor || "#353946")}
@@ -1050,23 +1046,22 @@ function renderInspector() {
 
   if (node.type === "text") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Color</span><span class="minor">type</span></div>
+      <div class="inspector-section-title"><span>Color</span></div>
       <div class="field-grid">${colorField("Text color", "color", props.color || "#f2f3f7")}</div>
     </div>`;
   }
 
   if (node.type === "button") {
     markup += `<div class="inspector-section">
-      <div class="inspector-section-title"><span>Appearance</span><span class="minor">visual button</span></div>
+      <div class="inspector-section-title"><span>Appearance</span></div>
       <div class="field-grid">${colorField("Text color", "color", props.color || "#f8fbff")}</div>
     </div>`;
   }
 
   markup += `<div class="inspector-section">
-    <div class="inspector-section-title"><span>Layer</span><span class="minor">canvas</span></div>
+    <div class="inspector-section-title"><span>Layer</span></div>
     <div class="toggle-row"><span>Visible on canvas</span><label class="switch"><input type="checkbox" data-node-visible="true" ${node.visible ? "checked" : ""} /><span class="switch-track"></span></label></div>
     <div class="toggle-row"><span>Lock position</span><label class="switch"><input type="checkbox" data-node-locked="true" ${node.locked ? "checked" : ""} /><span class="switch-track"></span></label></div>
-    <div class="type-helper">Export uses the same layer order as the canvas. Buttons are visual-only until interactions are added.</div>
   </div>`;
 
   refs.inspectorContent.innerHTML = markup;
@@ -1078,11 +1073,7 @@ function pageInspectorMarkup() {
   const preset = getActivePreset();
   const size = getPageSize(state.activeDevice);
   const customSize = state.activeDevice !== "desktop" && page.responsive && page.responsive[state.activeDevice];
-  return `<div class="inspector-empty">
-    <span class="empty-icon">${iconSvg("section")}</span>
-    <strong>Website frame</strong>
-    <p>This is the root frame for your exported page. Change its height here or drag the handle at the bottom of the canvas.</p>
-  </div>
+  return `<div class="inspector-empty compact-empty"><strong>Website frame</strong></div>
   <div class="page-settings-card">
     <div class="inspector-section-title"><span>${escapeHtml(page.name)}</span><span class="minor">root frame</span></div>
     <div class="field-grid">
@@ -1248,7 +1239,7 @@ function selectField(label, key, value, options, extraClass = "") {
 
 function parentField(node) {
   if (node.type === "section") {
-    return '<div class="field-full type-helper" style="margin-top:0">Frames can contain other elements. Drag layers into a frame to nest them.</div>';
+    return "";
   }
   const options = ['<option value="">Page (no frame)</option>'];
   state.project.nodes.filter((candidate) => candidate.type === "section" && candidate.id !== node.id && !isDescendant(candidate.id, node.id)).forEach((candidate) => {
