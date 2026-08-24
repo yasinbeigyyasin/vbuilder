@@ -23,7 +23,52 @@ const TYPE_ICONS = {
   image: '<rect x="3" y="3" width="14" height="14" rx="2" /><circle cx="7" cy="7" r="1.2" /><path d="m4.5 14 3.2-3.2 2.2 2.1 1.6-1.5 4 3.6" />',
   shape: '<rect x="3.5" y="3.5" width="13" height="13" rx="2" />',
   button: '<rect x="2.8" y="6" width="14.4" height="8" rx="2" /><path d="M7 10h6" />',
-  section: '<rect x="3" y="3" width="14" height="14" rx="2" /><path d="M3 7h14M7 7v10" />',
+  section: '<path d="M5 3H3v2M15 3h2v2M17 15v2h-2M5 17H3v-2M7 3v14M13 3v14M3 7h14M3 13h14" />',
+  "align-left": '<path d="M4 5h12M4 10h8M4 15h12" />',
+  "align-center": '<path d="M4 5h12M6 10h8M4 15h12" />',
+  "align-right": '<path d="M4 5h12M8 10h8M4 15h12" />',
+  "align-top": '<path d="M5 4v12M10 4v8M15 4v12" />',
+  "align-middle": '<path d="M5 4v12M10 6v8M15 4v12" />',
+  "align-bottom": '<path d="M5 4v12M10 8v8M15 4v12" />',
+  rotate: '<path d="M4 10a6 6 0 1 0 2-4.5" /><path d="M4 4v4h4" />',
+  "flip-horizontal": '<path d="M3 4v12M17 4v12M7 7l3 3-3 3M13 7l-3 3 3 3" />',
+  "flip-vertical": '<path d="M4 3h12M4 17h12M7 7l3 3 3-3M7 13l3-3 3 3" />',
+};
+
+const LUCIDE_PATHS = {
+  plus: '<path d="M5 12h14" /><path d="M12 5v14" />',
+  "file-text": '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /><path d="M14 2v5h6M8 13h8M8 17h6" />',
+  monitor: '<rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8M12 17v4" />',
+  tablet: '<rect x="6" y="2" width="12" height="20" rx="2" /><path d="M10 18h4" />',
+  smartphone: '<rect x="8" y="2" width="8" height="20" rx="2" /><path d="M11 18h2" />',
+  undo: '<path d="m9 14-5-5 5-5" /><path d="M4 9h9a6 6 0 0 1 6 6v1" />',
+  redo: '<path d="m15 14 5-5-5-5" /><path d="M20 9h-9a6 6 0 0 0-6 6v1" />',
+  pointer: '<path d="m5 3 13 8-6 1 3 6-2 1-3-6-5 5z" />',
+  frame: '<path d="M6 3H3v3M18 3h3v3M21 18v3h-3M3 18v3h3M8 3v18M16 3v18M3 8h18M3 16h18" />',
+  type: '<path d="M4 5V3h16v2M12 3v18M8 21h8" />',
+  square: '<rect x="4" y="4" width="16" height="16" rx="2" />',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8" cy="8" r="1.5" /><path d="m4 17 5-5 3 3 2-2 6 5" />',
+  "rectangle-horizontal": '<rect x="3" y="7" width="18" height="10" rx="2" /><path d="M8 12h8" />',
+  code: '<path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14" />',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14" />',
+  rotate: '<path d="M4 10a8 8 0 1 0 2.3-5.7L4 7" /><path d="M4 3v4h4" />',
+  "flip-horizontal": '<path d="M3 4v16M21 4v16M7 8l4 4-4 4M17 8l-4 4 4 4" />',
+  "flip-vertical": '<path d="M4 3h16M4 21h16M8 7l4 4 4-4M8 17l4-4 4 4" />',
+  "align-left": '<path d="M4 6h16M4 12h11M4 18h16" />',
+  "align-center": '<path d="M4 6h16M7 12h10M4 18h16" />',
+  "align-right": '<path d="M4 6h16M9 12h11M4 18h16" />',
+  "align-top": '<path d="M6 4v16M12 4v11M18 4v16" />',
+  "align-middle": '<path d="M6 4v16M12 7v10M18 4v16" />',
+  "align-bottom": '<path d="M6 4v16M12 9v11M18 4v16" />',
+};
+
+const ICON_ALIASES = {
+  text: "type",
+  image: "image",
+  shape: "square",
+  button: "rectangle-horizontal",
+  section: "frame",
 };
 
 const STORAGE_KEY = "vbuilder-project-v1";
@@ -100,6 +145,8 @@ function commonBase(overrides = {}) {
     width: 240,
     height: 120,
     rotation: 0,
+    flipX: false,
+    flipY: false,
     opacity: 100,
     radius: 10,
     fill: "#252832",
@@ -785,7 +832,7 @@ function createCanvasNode(node, props, index) {
   element.style.opacity = `${Math.max(0, Math.min(100, num(props.opacity, 100))) / 100}`;
   element.style.borderRadius = `${Math.max(0, num(props.radius))}px`;
   element.style.border = num(props.borderWidth) > 0 ? `${num(props.borderWidth)}px solid ${props.borderColor || "transparent"}` : "0 solid transparent";
-  element.style.transform = `rotate(${num(props.rotation)}deg)`;
+  element.style.transform = `rotate(${num(props.rotation)}deg) scaleX(${props.flipX ? -1 : 1}) scaleY(${props.flipY ? -1 : 1})`;
 
   if (node.type === "text") {
     const inner = document.createElement("div");
@@ -905,23 +952,50 @@ function renderInspector() {
     <div class="selected-heading">
       <span class="selected-type-icon">${iconSvg(node.type)}</span>
       <div class="selected-name"><input type="text" value="${escapeAttr(node.name)}" maxlength="48" data-node-name="true" aria-label="Layer name" /><small>${TYPE_LABELS[node.type]}</small></div>
-      <button class="icon-button compact delete-button" type="button" data-delete-node="true" title="Delete layer" aria-label="Delete layer">×</button>
     </div>
   </div>
   <div class="inspector-section breakpoint-section">
     <div class="breakpoint-banner"><div class="breakpoint-banner-copy"><strong>${bannerTitle}</strong><span>${bannerText}</span></div>${resetButton}</div>
   </div>
-  <div class="inspector-section">
-    <div class="inspector-section-title"><span>Layout</span><span class="minor">${device.width} × ${device.height}</span></div>
+  <div class="inspector-section design-inspector-section">
+    <div class="design-group-heading">Position</div>
+    <div class="design-subheading">Alignment</div>
+    <div class="alignment-grid">
+      ${alignmentButton("x", "start", "align-left", "Align left")}
+      ${alignmentButton("x", "center", "align-center", "Align horizontal center")}
+      ${alignmentButton("x", "end", "align-right", "Align right")}
+      ${alignmentButton("y", "start", "align-top", "Align top")}
+      ${alignmentButton("y", "center", "align-middle", "Align vertical center")}
+      ${alignmentButton("y", "end", "align-bottom", "Align bottom")}
+    </div>
+    <div class="design-subheading">Position</div>
+    <div class="compact-field-row">
+      ${compactNumberField("X", "x", props.x, -2000, 2000)}
+      ${compactNumberField("Y", "y", props.y, -2000, 3000)}
+    </div>
+    <div class="design-subheading">Rotation</div>
+    <div class="rotation-row">
+      ${compactNumberField("↻", "rotation", props.rotation, -360, 360, "1", "°")}
+      <div class="rotation-actions">
+        ${transformButton("rotate", "rotate", "Rotate 90 degrees")}
+        ${transformButton("flip-horizontal", "flip-horizontal", "Flip horizontal")}
+        ${transformButton("flip-vertical", "flip-vertical", "Flip vertical")}
+      </div>
+    </div>
+  </div>
+  <div class="inspector-section design-inspector-section">
+    <div class="design-group-heading">Layout</div>
+    <div class="design-subheading">Dimensions</div>
+    <div class="compact-field-row">
+      ${compactNumberField("W", "width", props.width, 1, 3000)}
+      ${compactNumberField("H", "height", props.height, 1, 3000)}
+    </div>
+    <div class="design-subheading">Responsive behavior</div>
     <div class="field-grid">
-      ${numberField("X", "x", props.x, -2000, 2000)}
-      ${numberField("Y", "y", props.y, -2000, 3000)}
-      ${numberField("Width", "width", props.width, 1, 3000)}
-      ${numberField("Height", "height", props.height, 1, 3000)}
-      ${selectField("Responsive behavior", "responsiveBehavior", props.responsiveBehavior || "scale", [{value:"scale",label:"Scale with viewport"},{value:"left",label:"Keep left aligned"},{value:"right",label:"Keep right aligned"},{value:"center",label:"Keep centered"},{value:"stretch",label:"Stretch to edges"}], "field-full")}
+      ${selectField("Mode", "responsiveBehavior", props.responsiveBehavior || "scale", [{value:"scale",label:"Scale with viewport"},{value:"left",label:"Keep left aligned"},{value:"right",label:"Keep right aligned"},{value:"center",label:"Keep centered"},{value:"stretch",label:"Stretch to edges"}], "field-full")}
       ${parentField(node)}
     </div>
-    <div class="type-helper">Auto layout creates a starting point. Change any value on tablet or mobile to save a precise breakpoint override.</div>
+    <div class="type-helper">Change a value on tablet or mobile to save a precise breakpoint override.</div>
   </div>`;
 
   if (node.type === "text" || node.type === "button") {
@@ -1021,6 +1095,29 @@ function pageInspectorMarkup() {
   </div>`;
 }
 
+function alignNode(node, axis, alignment) {
+  const props = getNodeProps(node);
+  const container = getContainerProps(node, state.activeDevice);
+  const patch = {};
+  if (axis === "x") {
+    patch.x = alignment === "start" ? 0 : alignment === "center" ? Math.round((container.width - props.width) / 2) : Math.round(container.width - props.width);
+  } else {
+    patch.y = alignment === "start" ? 0 : alignment === "center" ? Math.round((container.height - props.height) / 2) : Math.round(container.height - props.height);
+  }
+  setNodeProps(node, patch);
+}
+
+function transformNode(node, action) {
+  const props = getNodeProps(node);
+  if (action === "rotate") {
+    setNodeProps(node, { rotation: ((num(props.rotation) + 90 + 360) % 360) });
+  } else if (action === "flip-horizontal") {
+    setNodeProps(node, { flipX: !props.flipX });
+  } else if (action === "flip-vertical") {
+    setNodeProps(node, { flipY: !props.flipY });
+  }
+}
+
 function bindNodeInspector(node) {
   refs.inspectorContent.querySelectorAll("[data-field]").forEach((field) => {
     field.addEventListener("change", () => {
@@ -1033,6 +1130,18 @@ function bindNodeInspector(node) {
           setNodeProps(node, { [key]: value });
         }
       });
+    });
+  });
+
+  refs.inspectorContent.querySelectorAll("[data-align-axis]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyChange(() => alignNode(node, button.dataset.alignAxis, button.dataset.alignValue));
+    });
+  });
+
+  refs.inspectorContent.querySelectorAll("[data-transform]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyChange(() => transformNode(node, button.dataset.transform));
     });
   });
 
@@ -1112,6 +1221,19 @@ function numberField(label, key, value, min = -9999, max = 9999, step = "1") {
   return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
 }
 
+function compactNumberField(label, key, value, min = -9999, max = 9999, step = "1", suffix = "") {
+  const leading = key === "rotation" ? `<span class="compact-field-icon">${iconSvg("rotate")}</span>` : `<span class="compact-field-label">${label}</span>`;
+  return `<label class="compact-number-field">${leading}<input type="number" data-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" aria-label="${escapeAttr(label || key)}" />${suffix ? `<span class="compact-field-suffix">${suffix}</span>` : ""}</label>`;
+}
+
+function alignmentButton(axis, alignment, icon, label) {
+  return `<button class="alignment-button" type="button" data-align-axis="${axis}" data-align-value="${alignment}" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}">${iconSvg(icon)}</button>`;
+}
+
+function transformButton(action, icon, label) {
+  return `<button class="rotation-action" type="button" data-transform="${action}" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}">${iconSvg(icon)}</button>`;
+}
+
 function pageNumberField(label, key, value, min = 0, max = 9999, step = "1") {
   return `<label class="field"><span class="field-label">${label}</span><input class="field-input" type="number" data-page-field="${key}" data-value-type="number" value="${escapeAttr(numberInputValue(value))}" min="${min}" max="${max}" step="${step}" /></label>`;
 }
@@ -1160,7 +1282,22 @@ function colorValue(value) {
 }
 
 function iconSvg(type) {
-  return `<svg viewBox="0 0 20 20" aria-hidden="true">${TYPE_ICONS[type] || TYPE_ICONS.shape}</svg>`;
+  const iconName = ICON_ALIASES[type] || type;
+  const path = LUCIDE_PATHS[iconName] || LUCIDE_PATHS.square;
+  return `<svg class="lucide-icon" viewBox="0 0 24 24" aria-hidden="true" stroke-width="1.8">${path}</svg>`;
+}
+
+function hydrateLucideIcons() {
+  document.querySelectorAll("[data-lucide]").forEach((placeholder) => {
+    const path = LUCIDE_PATHS[placeholder.dataset.lucide] || LUCIDE_PATHS.square;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "lucide-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.innerHTML = path;
+    placeholder.replaceWith(svg);
+  });
 }
 
 function selectNode(id) {
@@ -1728,7 +1865,7 @@ function nodeCssLines(node, device) {
     `opacity: ${Math.max(0, Math.min(100, num(props.opacity, 100))) / 100};`,
     `border-radius: ${fluidSize(Math.max(0, num(props.radius)), container.width)};`,
     num(props.borderWidth) > 0 ? `border: ${num(props.borderWidth)}px solid ${props.borderColor || "transparent"};` : "border: 0 solid transparent;",
-    num(props.rotation) ? `transform: rotate(${num(props.rotation)}deg);` : "",
+    (num(props.rotation) || props.flipX || props.flipY) ? `transform: rotate(${num(props.rotation)}deg) scaleX(${props.flipX ? -1 : 1}) scaleY(${props.flipY ? -1 : 1});` : "",
   ].filter(Boolean);
 
   if (node.type === "text") {
@@ -2423,6 +2560,7 @@ function handleKeydown(event) {
 
 state.history = [serializeProject()];
 state.historyIndex = 0;
+hydrateLucideIcons();
 bindEvents();
 bindTooltips();
 renderAll();
